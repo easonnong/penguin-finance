@@ -11,6 +11,10 @@ contract LpToken is Owned, ERC20 {
         uint8 _decimals
     ) Owned(msg.sender) ERC20(_name, _symbol, _decimals) {}
 
+    /**
+     * @dev Mints new tokens and sends them to the specified address.
+     * Can only be called by the contract owner.
+     */
     function mint(address to, uint256 amount) public onlyOwner {
         _mint(to, amount);
     }
