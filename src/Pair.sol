@@ -25,7 +25,7 @@ contract Pair is ERC20, ERC721TokenReceiver {
     }
 
     // ====================== //
-    // ===== Swap logic ===== //
+    // ===== AMM logic ===== //
     // ====================== //
 
     /**
@@ -115,6 +115,9 @@ contract Pair is ERC20, ERC721TokenReceiver {
         // outputAmount = (baseTokenReserves * fractionalTokenReserves + baseTokenReserves*inputAmount -(baseTokenReserves * fractionalTokenReserves)) / (fractionalTokenReserves + inputAmount)
         // outputAmount = (baseTokenReserves * inputAmount) / (fractionalTokenReserves + inputAmount)
         //@audit outputAmoount issuse
+        // outputAmount = (inputAmount * fractionalTokenReserves) / (baseTokenReserves + inputAmount)
+        // fractionalTokenReserves - outputAmount =(baseTokenReserves*fractionalTokenReserves) / (baseTokenReserves + inputAmount)
+        // (fractionalTokenReserves - outputAmount)*(baseTokenReserves + inputAmount) = baseTokenReserves*fractionalTokenReserves
         uint256 outputAmount = (inputAmount * fractionalTokenReserves()) /
             (baseTokenReserves() + inputAmount);
 
@@ -171,15 +174,35 @@ contract Pair is ERC20, ERC721TokenReceiver {
         return (baseTokenOutputAmount, fractionalTokenOutputAmount);
     }
 
+    // ========================= //
+    // ===== NFT AMM logic ===== //
+    // ========================= //
+
+    function nftAdd(
+        uint256 baseTokenAmount,
+        uint256[] calldata tokenIds,
+        uint256 minLpTokenAmount
+    ) public returns (uint256) {
+        uint256 fractionalTokenAmount = wrap(tokenIds);
+        uint256 lpTokenAmount = add(
+            baseTokenAmount,
+            fractionalTokenAmount,
+            minLpTokenAmount
+        );
+
+        return lpTokenAmount;
+    }
+
     // ====================== //
     // ===== Wrap logic ===== //
     // ====================== //
 
-    function wrap(uint256[] calldata tokenIds) public {
+    function wrap(uint256[] calldata tokenIds) public returns (uint256) {
         // ~~~~~~ Effects ~~~~~~ //
+        uint256 fractionalTokenAmount = tokenIds.length * ONE;
 
         // mint fractional tokens to sender
-        _mint(msg.sender, tokenIds.length * ONE);
+        _mint(msg.sender, fractionalTokenAmount);
 
         // ~~~~~~ Interactions ~~~~~~ //
 
@@ -191,13 +214,16 @@ contract Pair is ERC20, ERC721TokenReceiver {
                 tokenIds[i]
             );
         }
+
+        return fractionalTokenAmount;
     }
 
-    function unwrap(uint256[] calldata tokenIds) public {
+    function unwrap(uint256[] calldata tokenIds) public returns (uint256) {
         // ~~~~~~ Effects ~~~~~~ //
+        uint256 fractionalTokenAmount = tokenIds.length * ONE;
 
         // burn fractional tokens from sender
-        _burn(msg.sender, tokenIds.length * ONE);
+        _burn(msg.sender, fractionalTokenAmount);
 
         // ~~~~~~ Interactions ~~~~~~ //
 
@@ -209,6 +235,8 @@ contract Pair is ERC20, ERC721TokenReceiver {
                 tokenIds[i]
             );
         }
+
+        return fractionalTokenAmount;
     }
 
     // ========================== //
