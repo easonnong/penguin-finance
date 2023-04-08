@@ -13,9 +13,10 @@ contract Pair is ERC20 {
     address public immutable baseToken; // address of the base token
     address public immutable lpToken;
 
-    constructor(address _nft, address _baseToken)
-        ERC20("Fractional token", "FT", 18)
-    {
+    constructor(
+        address _nft,
+        address _baseToken
+    ) ERC20("Fractional token", "FT", 18) {
         nft = _nft;
         baseToken = _baseToken;
 
@@ -79,10 +80,10 @@ contract Pair is ERC20 {
      * @param maxInputAmount The maximum amount of base tokens to spend
      * @return The amount of base tokens spent
      */
-    function buy(uint256 outputAmount, uint256 maxInputAmount)
-        public
-        returns (uint256)
-    {
+    function buy(
+        uint256 outputAmount,
+        uint256 maxInputAmount
+    ) public returns (uint256) {
         // x * y = k
         // Calculate the required amount of base tokens to buy the output amount of fractional tokens
         // (baseTokenReserves + inputAmount)*(fractionalTokenReserves - outputAmount) = baseTokenReserves * fractionalTokenReserves
@@ -103,6 +104,33 @@ contract Pair is ERC20 {
 
         // transfer base token in
         ERC20(baseToken).transferFrom(msg.sender, address(this), inputAmount);
+
+        return inputAmount;
+    }
+
+    function sell(
+        uint256 inputAmount,
+        uint256 minOutputAmount
+    ) public returns (uint256) {
+        // (baseTokenReserves - outputAmount)*(fractionalTokenReserves + inputAmount) = baseTokenReserves * fractionalTokenReserves
+        // baseTokenReserves - outputAmount = (baseTokenReserves * fractionalTokenReserves) / (fractionalTokenReserves + inputAmount)
+        // outputAmount = (baseTokenReserves * fractionalTokenReserves + baseTokenReserves*inputAmount -(baseTokenReserves * fractionalTokenReserves)) / (fractionalTokenReserves + inputAmount)
+        // outputAmount = (baseTokenReserves * inputAmount) / (fractionalTokenReserves + inputAmount)
+        //@audit outputAmoount issuse
+        uint256 outputAmount = (inputAmount * fractionalTokenReserves()) /
+            (baseTokenReserves() + inputAmount);
+
+        // check that the outputted amount of fractional tokens is greater than the min amount
+        require(
+            outputAmount >= minOutputAmount,
+            "Slippage: amount out is too small"
+        );
+
+        // transfer fractional tokens from sender
+        _transferFrom(msg.sender, address(this), inputAmount);
+
+        // transfer base tokens out
+        ERC20(baseToken).transfer(msg.sender, outputAmount);
 
         return inputAmount;
     }
