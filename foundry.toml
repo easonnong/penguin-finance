@@ -9,4 +9,4 @@ optimizer_runs = 100_000
 runs = 1024             # fuzz testing times
 
 [fmt]
-line_length = 100       # format line length
+line_length = 120       # format line length
