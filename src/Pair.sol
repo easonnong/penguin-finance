@@ -2,6 +2,7 @@
 pragma solidity 0.8.17;
 
 import "solmate/tokens/ERC20.sol";
+import "solmate/tokens/ERC721.sol";
 import "openzeppelin/utils/math/Math.sol";
 
 import "./LpToken.sol";
@@ -24,7 +25,7 @@ contract Pair is ERC20 {
     }
 
     // ====================== //
-    // ===== Core logic ===== //
+    // ===== Swap logic ===== //
     // ====================== //
 
     /**
@@ -168,6 +169,24 @@ contract Pair is ERC20 {
         LpToken(lpToken).burn(msg.sender, lpTokenAmount);
 
         return (baseTokenOutputAmount, fractionalTokenOutputAmount);
+    }
+
+    // ====================== //
+    // ===== Wrap logic ===== //
+    // ====================== //
+
+    function wrap(uint256[] calldata tokenIds) public {
+        // ~~~~~~ Effects ~~~~~~ //
+
+        // mint fractional tokens to sender
+        _mint(msg.sender, tokenIds.length * ONE);
+
+        // ~~~~~~ Interactions ~~~~~~ //
+
+        // transfer nfts from sender
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            ERC721(nft).transferFrom(msg.sender, address(this), tokenIds[i]);
+        }
     }
 
     // ========================== //
