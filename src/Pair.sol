@@ -133,7 +133,7 @@ contract Pair is ERC20 {
         uint256 lpTokenAmount,
         uint256 minBaseTokenOutputAmount,
         uint256 minFractionalTokenOutputAmount
-    ) public returns (uint256) {
+    ) public returns (uint256, uint256) {
         // calculate the output amounts
         uint256 lpTokenSupply = ERC20(lpToken).totalSupply();
         uint256 baseTokenOutputAmount = (baseTokenReserves() * lpTokenAmount) /
@@ -157,7 +157,7 @@ contract Pair is ERC20 {
         // ~~~~~~ Effects ~~~~~~ //
 
         // transfer fractional tokens to sender
-        _transferFrom(msg.sender, address(this), fractionalTokenOutputAmount);
+        _transferFrom(address(this), msg.sender, fractionalTokenOutputAmount);
 
         // ~~~~~~ Interactions ~~~~~~ //
 
@@ -167,7 +167,7 @@ contract Pair is ERC20 {
         // burn lp tokens from sender
         LpToken(lpToken).burn(msg.sender, lpTokenAmount);
 
-        return 1;
+        return (baseTokenOutputAmount, fractionalTokenOutputAmount);
     }
 
     // ========================== //
