@@ -107,19 +107,16 @@ contract Pair is ERC20, ERC721TokenReceiver {
     }
 
     function sell(
-        uint256 inputAmount,
+        uint256 inputAmount, // fractionalTokenAmount
         uint256 minOutputAmount
     ) public returns (uint256) {
         // (baseTokenReserves - outputAmount)*(fractionalTokenReserves + inputAmount) = baseTokenReserves * fractionalTokenReserves
         // baseTokenReserves - outputAmount = (baseTokenReserves * fractionalTokenReserves) / (fractionalTokenReserves + inputAmount)
-        // outputAmount = (baseTokenReserves * fractionalTokenReserves + baseTokenReserves*inputAmount -(baseTokenReserves * fractionalTokenReserves)) / (fractionalTokenReserves + inputAmount)
-        // outputAmount = (baseTokenReserves * inputAmount) / (fractionalTokenReserves + inputAmount)
+        // outputAmount = (baseTokenReserves*fractionalTokenReserves + baseTokenReserves*inputAmount - baseTokenReserves * fractionalTokenReserves) / (fractionalTokenReserves + inputAmount)
+        // outputAmount = (baseTokenReserves*inputAmount) / (fractionalTokenReserves + inputAmount)
         //@audit outputAmoount issuse
-        // outputAmount = (inputAmount * fractionalTokenReserves) / (baseTokenReserves + inputAmount)
-        // fractionalTokenReserves - outputAmount =(baseTokenReserves*fractionalTokenReserves) / (baseTokenReserves + inputAmount)
-        // (fractionalTokenReserves - outputAmount)*(baseTokenReserves + inputAmount) = baseTokenReserves*fractionalTokenReserves
-        uint256 outputAmount = (inputAmount * fractionalTokenReserves()) /
-            (baseTokenReserves() + inputAmount);
+        uint256 outputAmount = (baseTokenReserves() * inputAmount) /
+            (fractionalTokenReserves() + inputAmount);
 
         // check that the outputted amount of fractional tokens is greater than the min amount
         require(outputAmount >= minOutputAmount, "Slippage: amount out");
@@ -197,11 +194,20 @@ contract Pair is ERC20, ERC721TokenReceiver {
         uint256[] calldata tokenIds,
         uint256 maxInputAmount
     ) public returns (uint256) {
-        uint256 outputAmount = tokenIds.length * 1e18;
-        uint256 inputAmount = buy(outputAmount, maxInputAmount);
+        uint256 inputAmount = buy(tokenIds.length * 1e18, maxInputAmount);
         unwrap(tokenIds);
 
         return inputAmount;
+    }
+
+    function nftSell(
+        uint256[] calldata tokenIds,
+        uint256 minOutputAmount
+    ) public returns (uint256) {
+        uint256 inputAmount = wrap(tokenIds); // fractionalTokenAmount
+        uint256 outputAmount = sell(inputAmount, minOutputAmount);
+
+        return outputAmount;
     }
 
     // ====================== //
