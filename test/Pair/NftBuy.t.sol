@@ -3,8 +3,9 @@ pragma solidity 0.8.17;
 
 import "../shared/Fixture.t.sol";
 import "../../src/Penguin.sol";
+import "solmate/tokens/ERC721.sol";
 
-contract NftBuyTest is Fixture {
+contract NftBuyTest is Fixture, ERC721TokenReceiver {
     uint256 public outputAmount;
     uint256 public maxInputAmount;
     uint256[] public tokenIds;
