@@ -26,8 +26,7 @@ contract Pair is ERC20 {
      * @dev Adds liquidity to the pool
      * @param baseTokenAmount The amount of base token to add
      * @param fractionalTokenAmount The amount of fractional token to add
-     * @param minBaseTokenOutputAmount The minimum amount of base token to receive
-     * @param minFractionalTokenOutputAmount The minimum amount of fractional token to receive
+     * @param minLpTokenAmount The minimum amount of LP token to receive
      */
     function add(
         uint256 baseTokenAmount,
@@ -39,6 +38,21 @@ contract Pair is ERC20 {
             baseTokenReserves();
         uint256 fractionalTokenShare = (fractionalTokenAmount * lpTokenSupply) /
             fractionalTokenReserves();
+
+        uint256 lpTokenAmount = Math.min(baseTokenShare, fractionalTokenShare);
+        require(
+            lpTokenAmount >= minLpTokenAmount,
+            "Slippage: Insufficient LP token output amount"
+        );
+
+        ERC20(baseToken).transferFrom(
+            msg.sender,
+            address(this),
+            baseTokenAmount
+        );
+        transferFrom(msg.sender, address(this), fractionalTokenAmount);
+
+        LpToken(lpToken).mint(msg.sender, lpTokenAmount);
     }
 
     /**
@@ -54,10 +68,18 @@ contract Pair is ERC20 {
         return (baseTokenBalance * ONE) / fractionalTokenBalance; // return the current price
     }
 
+    /**
+     * @dev Returns the base token reserves
+     * @return The base token reserves
+     */
     function baseTokenReserves() public view returns (uint256) {
         return ERC20(baseToken).balanceOf(address(this));
     }
 
+    /**
+     * @dev Returns the fractional token reserves
+     * @return The fractional token reserves
+     */
     function fractionalTokenReserves() public view returns (uint256) {
         return balanceOf[address(this)];
     }
