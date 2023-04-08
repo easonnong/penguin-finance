@@ -13,15 +13,18 @@ contract Pair is ERC20 {
     address public immutable baseToken; // address of the base token
     address public immutable lpToken;
 
-    constructor(
-        address _nft,
-        address _baseToken
-    ) ERC20("Fractional token", "FT", 18) {
+    constructor(address _nft, address _baseToken)
+        ERC20("Fractional token", "FT", 18)
+    {
         nft = _nft;
         baseToken = _baseToken;
 
         lpToken = address(new LpToken("LP token", "LPT", 18));
     }
+
+    // ====================== //
+    // ===== Core logic ===== //
+    // ====================== //
 
     /**
      * @dev Adds liquidity to the pool
@@ -70,6 +73,41 @@ contract Pair is ERC20 {
         return lpTokenAmount;
     }
 
+    /**
+     * @dev Buys fractional tokens with base tokens
+     * @param outputAmount The amount of fractional tokens to buy
+     * @param maxInputAmount The maximum amount of base tokens to spend
+     * @return The amount of base tokens spent
+     */
+    function buy(uint256 outputAmount, uint256 maxInputAmount)
+        public
+        returns (uint256)
+    {
+        // x * y = k
+        // Calculate the required amount of base tokens to buy the output amount of fractional tokens
+        // (baseTokenReserves + amountIn)*(fractionalTokenReserves - outputAmount) = baseTokenReserves * fractionalTokenReserves
+        // baseTokenReserves + amountIn = （baseTokenReserves * fractionalTokenReserves）/ (fractionalTokenReserves - outputAmount)
+        // amountIn = （baseTokenReserves * fractionalTokenReserves - (baseTokenReserves*fractionalTokenReserves - baseTokenReserves*outputAmount)）/ (fractionalTokenReserves - outputAmount)
+        // amountIn = (baseTokenReserves*outputAmount) / (fractionalTokenReserves - outputAmount)
+        uint256 amountIn = (outputAmount * baseTokenReserves()) /
+            (fractionalTokenReserves() - outputAmount);
+
+        // check that the required amount of base tokens is less than the max amount
+        require(amountIn <= maxInputAmount, "Slippage: amount in is too large");
+
+        // transfer fractional tokens to sender
+        transfer(msg.sender, outputAmount);
+
+        // transfer base token in
+        ERC20(baseToken).transferFrom(msg.sender, address(this), amountIn);
+
+        return amountIn;
+    }
+
+    // ========================== //
+    // ===== Internal utils ===== //
+    // ========================== //
+
     function _transferFrom(
         address from,
         address to,
@@ -87,6 +125,10 @@ contract Pair is ERC20 {
 
         return true;
     }
+
+    // =================== //
+    // ===== Getters ===== //
+    // =================== //
 
     /**
      * @dev Returns the current price of the pair
