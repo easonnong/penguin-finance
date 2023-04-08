@@ -85,23 +85,26 @@ contract Pair is ERC20 {
     {
         // x * y = k
         // Calculate the required amount of base tokens to buy the output amount of fractional tokens
-        // (baseTokenReserves + amountIn)*(fractionalTokenReserves - outputAmount) = baseTokenReserves * fractionalTokenReserves
-        // baseTokenReserves + amountIn = （baseTokenReserves * fractionalTokenReserves）/ (fractionalTokenReserves - outputAmount)
-        // amountIn = （baseTokenReserves * fractionalTokenReserves - (baseTokenReserves*fractionalTokenReserves - baseTokenReserves*outputAmount)）/ (fractionalTokenReserves - outputAmount)
-        // amountIn = (baseTokenReserves*outputAmount) / (fractionalTokenReserves - outputAmount)
-        uint256 amountIn = (outputAmount * baseTokenReserves()) /
+        // (baseTokenReserves + inputAmount)*(fractionalTokenReserves - outputAmount) = baseTokenReserves * fractionalTokenReserves
+        // baseTokenReserves + inputAmount = （baseTokenReserves * fractionalTokenReserves）/ (fractionalTokenReserves - outputAmount)
+        // inputAmount = （baseTokenReserves * fractionalTokenReserves - (baseTokenReserves*fractionalTokenReserves - baseTokenReserves*outputAmount)）/ (fractionalTokenReserves - outputAmount)
+        // inputAmount = (baseTokenReserves*outputAmount) / (fractionalTokenReserves - outputAmount)
+        uint256 inputAmount = (outputAmount * baseTokenReserves()) /
             (fractionalTokenReserves() - outputAmount);
 
         // check that the required amount of base tokens is less than the max amount
-        require(amountIn <= maxInputAmount, "Slippage: amount in is too large");
+        require(
+            inputAmount <= maxInputAmount,
+            "Slippage: amount in is too large"
+        );
 
         // transfer fractional tokens to sender
-        transfer(msg.sender, outputAmount);
+        _transferFrom(address(this), msg.sender, outputAmount);
 
         // transfer base token in
-        ERC20(baseToken).transferFrom(msg.sender, address(this), amountIn);
+        ERC20(baseToken).transferFrom(msg.sender, address(this), inputAmount);
 
-        return amountIn;
+        return inputAmount;
     }
 
     // ========================== //
@@ -157,5 +160,16 @@ contract Pair is ERC20 {
      */
     function fractionalTokenReserves() public view returns (uint256) {
         return balanceOf[address(this)];
+    }
+
+    /**
+     * @dev Calculates the amount of base tokens required to buy a given amount of fractional tokens
+     * @param outputAmount The amount of fractional tokens to buy
+     * @return The amount of base tokens required
+     */
+    function buyQuote(uint256 outputAmount) public view returns (uint256) {
+        return
+            (outputAmount * baseTokenReserves()) /
+            (fractionalTokenReserves() - outputAmount);
     }
 }
