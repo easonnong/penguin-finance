@@ -25,7 +25,7 @@ contract BuyTest is Fixture {
         deal(address(usd), address(this), maxInputAmount, true);
     }
 
-    function testItReturnsAmountIn() public {
+    function testItReturnsInputAmount() public {
         // arrange
         uint256 expectedInputAmount = maxInputAmount;
 
@@ -87,7 +87,7 @@ contract BuyTest is Fixture {
         maxInputAmount -= 1; // subtract 1 to cause revert
 
         // act
-        vm.expectRevert("Slippage: amount in is too large");
+        vm.expectRevert("Slippage: amount in");
         pair.buy(outputAmount, maxInputAmount);
     }
 }

@@ -57,7 +57,7 @@ contract Pair is ERC20 {
         // check that the amount of lp tokens outputted is greater than the min amount
         require(
             lpTokenAmount >= minLpTokenAmount,
-            "Slippage: Insufficient lp token output amount"
+            "Slippage: lp token amount out"
         );
 
         // transfer tokens in
@@ -94,10 +94,7 @@ contract Pair is ERC20 {
             (fractionalTokenReserves() - outputAmount);
 
         // check that the required amount of base tokens is less than the max amount
-        require(
-            inputAmount <= maxInputAmount,
-            "Slippage: amount in is too large"
-        );
+        require(inputAmount <= maxInputAmount, "Slippage: amount in");
 
         // transfer fractional tokens to sender
         _transferFrom(address(this), msg.sender, outputAmount);
@@ -121,10 +118,7 @@ contract Pair is ERC20 {
             (baseTokenReserves() + inputAmount);
 
         // check that the outputted amount of fractional tokens is greater than the min amount
-        require(
-            outputAmount >= minOutputAmount,
-            "Slippage: amount out is too small"
-        );
+        require(outputAmount >= minOutputAmount, "Slippage: amount out");
 
         // transfer fractional tokens from sender
         _transferFrom(msg.sender, address(this), inputAmount);
@@ -132,7 +126,48 @@ contract Pair is ERC20 {
         // transfer base tokens out
         ERC20(baseToken).transfer(msg.sender, outputAmount);
 
-        return inputAmount;
+        return outputAmount;
+    }
+
+    function remove(
+        uint256 lpTokenAmount,
+        uint256 minBaseTokenOutputAmount,
+        uint256 minFractionalTokenOutputAmount
+    ) public returns (uint256) {
+        // calculate the output amounts
+        uint256 lpTokenSupply = ERC20(lpToken).totalSupply();
+        uint256 baseTokenOutputAmount = (baseTokenReserves() * lpTokenAmount) /
+            lpTokenSupply;
+        uint256 fractionalTokenOutputAmount = (fractionalTokenReserves() *
+            lpTokenAmount) / lpTokenSupply;
+
+        // ~~~~~~ Checks ~~~~~~ //
+
+        // check that the base token output amount is greater than the min amount
+        require(
+            baseTokenOutputAmount >= minBaseTokenOutputAmount,
+            "Slippage: base token amount out"
+        );
+        // check that the fractional token output amount is greater than the min amount
+        require(
+            fractionalTokenOutputAmount >= minFractionalTokenOutputAmount,
+            "Slippage: fractional token amount out"
+        );
+
+        // ~~~~~~ Effects ~~~~~~ //
+
+        // transfer fractional tokens to sender
+        _transferFrom(msg.sender, address(this), fractionalTokenOutputAmount);
+
+        // ~~~~~~ Interactions ~~~~~~ //
+
+        // transfer base tokens to sender
+        ERC20(baseToken).transfer(msg.sender, baseTokenOutputAmount);
+
+        // burn lp tokens from sender
+        LpToken(lpToken).burn(msg.sender, lpTokenAmount);
+
+        return 1;
     }
 
     // ========================== //

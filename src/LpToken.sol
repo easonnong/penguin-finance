@@ -18,4 +18,12 @@ contract LpToken is Owned, ERC20 {
     function mint(address to, uint256 amount) public onlyOwner {
         _mint(to, amount);
     }
+
+    /**
+     * @dev Burns tokens from the specified address.
+     * Can only be called by the contract owner.
+     */
+    function burn(address from, uint256 amount) public onlyOwner {
+        _burn(from, amount);
+    }
 }
