@@ -3,8 +3,9 @@ pragma solidity ^0.8.17;
 
 import "../shared/Fixture.t.sol";
 import "../../src/Penguin.sol";
+import "solmate/tokens/ERC721.sol";
 
-contract UnwrapTest is Fixture {
+contract UnwrapTest is Fixture, ERC721TokenReceiver {
     uint256[] public tokenIds;
 
     function setUp() public {
