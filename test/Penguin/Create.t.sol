@@ -47,4 +47,33 @@ contract CreateTest is Fixture {
             "Should have set lp name"
         );
     }
+
+    function testItSavesPair() public {
+        // arrange
+        address nft = address(0xbeef);
+        address baseToken = address(0xcafe);
+        bytes32 merkleRoot = bytes32(uint256(0xb00b));
+
+        // act
+        address pair = address(penguin.create(nft, baseToken, merkleRoot));
+
+        // assert
+        assertEq(
+            penguin.pairs(nft, baseToken, merkleRoot),
+            pair,
+            "Should have saved pair address in pairs"
+        );
+    }
+
+    function testItRevertsIfDeployingSamePairTwice() public {
+        // arrange
+        address nft = address(0xbeef);
+        address baseToken = address(0xcafe);
+        bytes32 merkleRoot = bytes32(uint256(0xb00b));
+        penguin.create(nft, baseToken, merkleRoot);
+
+        // act
+        vm.expectRevert("Pair already exists");
+        penguin.create(nft, baseToken, merkleRoot);
+    }
 }

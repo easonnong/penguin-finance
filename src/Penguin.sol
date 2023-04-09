@@ -7,11 +7,22 @@ import "lib/SafeERC20Namer.sol";
 contract Penguin {
     using SafeERC20Namer for address;
 
+    // pairs[nft][baseToken][merkleRoot] -> pair
+    mapping(address => mapping(address => mapping(bytes32 => address)))
+        public pairs;
+
     function create(
         address nft,
         address baseToken,
         bytes32 merkleRoot
     ) public returns (Pair) {
+        require(
+            pairs[nft][baseToken][merkleRoot] == address(0),
+            "Pair already exists"
+        );
+
+        // deploy the pair
+
         string memory baseTokenSymbol = baseToken == address(0)
             ? "ETH"
             : baseToken.tokenSymbol();
@@ -23,14 +34,18 @@ contract Penguin {
             baseTokenSymbol
         );
 
-        return
-            new Pair(
-                nft,
-                baseToken,
-                merkleRoot,
-                pairSymbol,
-                nftName,
-                nftSymbol
-            );
+        Pair pair = new Pair(
+            nft,
+            baseToken,
+            merkleRoot,
+            pairSymbol,
+            nftName,
+            nftSymbol
+        );
+
+        // save the pair
+        pairs[nft][baseToken][merkleRoot] = address(pair);
+
+        return pair;
     }
 }
