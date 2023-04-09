@@ -21,7 +21,7 @@ contract Pair is ERC20, ERC721TokenReceiver {
     uint256 public constant CLOSE_GRACE_PERIOD = 7 days;
 
     address public immutable nft; // address of the NFT
-    address public immutable baseToken; // address of the base token
+    address public immutable baseToken; // address(0) for ETH
     address public immutable lpToken;
     bytes32 public immutable merkleRoot;
 
@@ -43,6 +43,8 @@ contract Pair is ERC20, ERC721TokenReceiver {
     event Sell(uint256 inputAmount, uint256 outputAmount);
     event Wrap(uint256[] tokenIds);
     event Unwrap(uint256[] tokenIds);
+    event Close(uint256 closeTimestamp);
+    event Withdraw(uint256 tokenId);
 
     constructor(
         address _nft,
@@ -97,6 +99,7 @@ contract Pair is ERC20, ERC721TokenReceiver {
             "Invalid ether input"
         );
 
+        // transfer base tokens in if the base token is not ETH
         if (baseToken != address(0)) {
             // transfer base tokens in
             // transfer tokens in
@@ -411,6 +414,8 @@ contract Pair is ERC20, ERC721TokenReceiver {
 
         // remove the pair from the Penguin contract
         penguin.destroy(nft, baseToken, merkleRoot);
+
+        emit Close(closeTimestamp);
     }
 
     // used to withdraw nfts in case of liquidity imbalance
@@ -419,7 +424,10 @@ contract Pair is ERC20, ERC721TokenReceiver {
         require(closeTimestamp != 0, "Withdraw not initiated");
         require(block.timestamp >= closeTimestamp, "Not withdrawable yet");
 
+        // transfer the nft to the penguin owner
         ERC721(nft).safeTransferFrom(address(this), msg.sender, tokenId);
+
+        emit Withdraw(tokenId);
     }
 
     // ***************** //
@@ -458,7 +466,7 @@ contract Pair is ERC20, ERC721TokenReceiver {
     function _baseTokenReserves() internal view returns (uint256) {
         return
             baseToken == address(0)
-                ? address(this).balance - msg.value
+                ? address(this).balance - msg.value // subtract the msg.value if the base token is ETH
                 : ERC20(baseToken).balanceOf(address(this));
     }
 
