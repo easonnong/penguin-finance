@@ -19,8 +19,10 @@ contract AddTest is Fixture {
 
     function testItInitMintsLpTokensToSender() public {
         // arrange
-        uint256 minLpTokenAmount = baseTokenAmount * fractionalTokenAmount;
-        uint256 expectedLpTokenAmount = baseTokenAmount * fractionalTokenAmount;
+        uint256 minLpTokenAmount = Math.sqrt(
+            baseTokenAmount * fractionalTokenAmount
+        );
+        uint256 expectedLpTokenAmount = minLpTokenAmount;
 
         // act
         uint256 lpTokenAmount = pair.add(
@@ -49,7 +51,9 @@ contract AddTest is Fixture {
 
     function testItTransfersBaseTokens() public {
         // arrange
-        uint256 minLpTokenAmount = baseTokenAmount * fractionalTokenAmount;
+        uint256 minLpTokenAmount = Math.sqrt(
+            baseTokenAmount * fractionalTokenAmount
+        );
         uint256 balanceBefore = usd.balanceOf(address(this));
 
         // act
@@ -71,7 +75,9 @@ contract AddTest is Fixture {
 
     function testItTransfersFractionalToken() public {
         // arrange
-        uint256 minLpTokenAmount = baseTokenAmount * fractionalTokenAmount;
+        uint256 minLpTokenAmount = Math.sqrt(
+            baseTokenAmount * fractionalTokenAmount
+        );
         uint256 balanceBefore = pair.balanceOf(address(this));
 
         // act
@@ -102,13 +108,15 @@ contract AddTest is Fixture {
 
     function testItMintsLpTokensAfterInit() public {
         // arrange
-        uint256 minLpTokenAmount = baseTokenAmount * fractionalTokenAmount;
+        uint256 minLpTokenAmount = Math.sqrt(
+            baseTokenAmount * fractionalTokenAmount
+        );
         pair.add(baseTokenAmount, fractionalTokenAmount, minLpTokenAmount); // initial add
         uint256 lpTokenSupplyBefore = lpToken.totalSupply();
 
-        uint256 expectedLpTokenAmount = baseTokenAmount *
-            fractionalTokenAmount *
-            17;
+        uint256 expectedLpTokenAmount = Math.sqrt(
+            baseTokenAmount * fractionalTokenAmount
+        ) * 17;
         minLpTokenAmount = expectedLpTokenAmount;
         baseTokenAmount = baseTokenAmount * 17;
         fractionalTokenAmount = fractionalTokenAmount * 17;
@@ -145,7 +153,9 @@ contract AddTest is Fixture {
 
     function testItRevertsSlippageAfterInitMint() public {
         // arrange
-        uint256 minLpTokenAmount = baseTokenAmount * fractionalTokenAmount;
+        uint256 minLpTokenAmount = Math.sqrt(
+            baseTokenAmount * fractionalTokenAmount
+        );
         pair.add(baseTokenAmount, fractionalTokenAmount, minLpTokenAmount); // initial add
 
         minLpTokenAmount = (baseTokenAmount * fractionalTokenAmount * 17) + 1; // add 1 to casue a revert
@@ -160,9 +170,9 @@ contract AddTest is Fixture {
 
     function testItRevertsIfValueIsNot0AndBaseTokenIsNot0() public {
         // arrange
-        uint256 minLpTokenAmount = (baseTokenAmount *
-            fractionalTokenAmount *
-            17);
+        uint256 minLpTokenAmount = Math.sqrt(
+            baseTokenAmount * fractionalTokenAmount
+        ) * 17;
         baseTokenAmount = baseTokenAmount * 17;
         fractionalTokenAmount = fractionalTokenAmount * 17;
 
@@ -177,9 +187,9 @@ contract AddTest is Fixture {
 
     function testItRevertsIfValueDoesNotMatchBaseTokenAmount() public {
         // arrange
-        uint256 minLpTokenAmount = (baseTokenAmount *
-            fractionalTokenAmount *
-            17);
+        uint256 minLpTokenAmount = Math.sqrt(
+            baseTokenAmount * fractionalTokenAmount
+        ) * 17;
         baseTokenAmount = baseTokenAmount * 17;
         fractionalTokenAmount = fractionalTokenAmount * 17;
 
@@ -194,7 +204,9 @@ contract AddTest is Fixture {
 
     function testItTransfersEther() public {
         // arrange
-        uint256 minLpTokenAmount = baseTokenAmount * fractionalTokenAmount;
+        uint256 minLpTokenAmount = Math.sqrt(
+            baseTokenAmount * fractionalTokenAmount
+        );
         uint256 balanceBefore = address(this).balance;
 
         // act
@@ -220,7 +232,9 @@ contract AddTest is Fixture {
 
     function testItMintsLpTokensAfterInitWithEther() public {
         // arrange
-        uint256 minLpTokenAmount = baseTokenAmount * fractionalTokenAmount;
+        uint256 minLpTokenAmount = Math.sqrt(
+            baseTokenAmount * fractionalTokenAmount
+        );
         ethPair.add{value: baseTokenAmount}(
             baseTokenAmount,
             fractionalTokenAmount,
@@ -228,9 +242,9 @@ contract AddTest is Fixture {
         ); // initial add
         uint256 lpTokenSupplyBefore = ethPairLpToken.totalSupply();
 
-        uint256 expectedLpTokenAmount = baseTokenAmount *
-            fractionalTokenAmount *
-            17;
+        uint256 expectedLpTokenAmount = Math.sqrt(
+            baseTokenAmount * fractionalTokenAmount
+        ) * 17;
         minLpTokenAmount = expectedLpTokenAmount;
         baseTokenAmount = baseTokenAmount * 17;
         fractionalTokenAmount = fractionalTokenAmount * 17;

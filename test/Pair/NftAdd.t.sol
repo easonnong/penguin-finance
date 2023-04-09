@@ -23,10 +23,10 @@ contract NftAddTest is Fixture {
 
     function testItInitMintsLpTokensToSender() public {
         // arrange
-        uint256 minLpTokenAmount = baseTokenAmount * tokenIds.length * 1e18;
-        uint256 expectedLpTokenAmount = baseTokenAmount *
-            tokenIds.length *
-            1e18;
+        uint256 minLpTokenAmount = Math.sqrt(
+            baseTokenAmount * tokenIds.length * 1e18
+        );
+        uint256 expectedLpTokenAmount = minLpTokenAmount;
 
         // act
         uint256 lpTokenAmount = pair.nftAdd(
@@ -56,7 +56,7 @@ contract NftAddTest is Fixture {
 
     function testItTransfersBaseTokens() public {
         // arrange
-        uint256 minLpTokenAmount = baseTokenAmount * tokenIds.length;
+        uint256 minLpTokenAmount = Math.sqrt(baseTokenAmount * tokenIds.length);
         uint256 balanceBefore = usd.balanceOf(address(this));
 
         // act
@@ -78,7 +78,7 @@ contract NftAddTest is Fixture {
 
     function testItTransfersNfts() public {
         // arrange
-        uint256 minLpTokenAmount = baseTokenAmount * tokenIds.length;
+        uint256 minLpTokenAmount = Math.sqrt(baseTokenAmount * tokenIds.length);
 
         // act
         pair.nftAdd(baseTokenAmount, tokenIds, minLpTokenAmount, proofs);
@@ -107,7 +107,9 @@ contract NftAddTest is Fixture {
         // arrange
         uint256 fractionalTokenAmount = 101 * 1e18;
         deal(address(pair), address(this), fractionalTokenAmount, true);
-        uint256 minLpTokenAmount = baseTokenAmount * fractionalTokenAmount;
+        uint256 minLpTokenAmount = Math.sqrt(
+            baseTokenAmount * fractionalTokenAmount
+        );
         pair.add(baseTokenAmount, fractionalTokenAmount, minLpTokenAmount); // initial add
         uint256 lpTokenSupplyBefore = lpToken.totalSupply();
 
@@ -160,7 +162,9 @@ contract NftAddTest is Fixture {
     function testItRevertsSlippageAfterInitMint() public {
         // arrange
         uint256 fractionalTokenAmount = 101 * 1e18;
-        uint256 minLpTokenAmount = baseTokenAmount * fractionalTokenAmount;
+        uint256 minLpTokenAmount = Math.sqrt(
+            baseTokenAmount * fractionalTokenAmount
+        );
         deal(address(pair), address(this), fractionalTokenAmount, true);
         pair.add(baseTokenAmount, fractionalTokenAmount, minLpTokenAmount); // initial add
 
@@ -189,7 +193,9 @@ contract NftAddTest is Fixture {
             "YEET-mids.json",
             tokenIds
         );
-        uint256 minLpTokenAmount = tokenIds.length * 1e18 * baseTokenAmount;
+        uint256 minLpTokenAmount = Math.sqrt(
+            tokenIds.length * 1e18 * baseTokenAmount
+        );
         bayc.setApprovalForAll(address(pair), true);
         usd.approve(address(pair), type(uint256).max);
 

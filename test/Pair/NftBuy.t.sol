@@ -21,7 +21,9 @@ contract NftBuyTest is Fixture, ERC721TokenReceiver {
         usd.approve(address(pair), type(uint256).max);
 
         uint256 baseTokenAmount = 3.15e18;
-        uint256 minLpTokenAmount = baseTokenAmount * tokenIds.length * 1e18;
+        uint256 minLpTokenAmount = Math.sqrt(
+            baseTokenAmount * tokenIds.length * 1e18
+        );
         deal(address(usd), address(this), baseTokenAmount, true);
         pair.nftAdd(baseTokenAmount, tokenIds, minLpTokenAmount, proofs);
 
@@ -129,7 +131,9 @@ contract NftBuyTest is Fixture, ERC721TokenReceiver {
         bayc.setApprovalForAll(address(pair), true);
         usd.approve(address(pair), type(uint256).max);
         uint256 baseTokenAmount = 3.15e18;
-        uint256 minLpTokenAmount = baseTokenAmount * tokenIds.length * 1e18;
+        uint256 minLpTokenAmount = Math.sqrt(
+            baseTokenAmount * tokenIds.length * 1e18
+        );
         deal(address(usd), address(this), baseTokenAmount, true);
         pair.nftAdd(baseTokenAmount, tokenIds, minLpTokenAmount, proofs);
         tokenIds.pop();

@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import "solmate/tokens/ERC721.sol";
 
-import "../shared/Fixture.t.sol";
+import "../Shared/Fixture.t.sol";
 import "../../src/Penguin.sol";
 
 contract CloseTest is Fixture, ERC721TokenReceiver {

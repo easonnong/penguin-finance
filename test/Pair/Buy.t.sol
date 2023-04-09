@@ -18,7 +18,9 @@ contract BuyTest is Fixture {
 
         usd.approve(address(pair), type(uint256).max);
 
-        uint256 minLpTokenAmount = baseTokenAmount * fractionalTokenAmount;
+        uint256 minLpTokenAmount = Math.sqrt(
+            baseTokenAmount * fractionalTokenAmount
+        );
         pair.add(baseTokenAmount, fractionalTokenAmount, minLpTokenAmount);
 
         maxInputAmount = pair.buyQuote(outputAmount);
