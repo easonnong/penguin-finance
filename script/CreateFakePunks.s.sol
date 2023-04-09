@@ -5,8 +5,8 @@ import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import "ERC721A/ERC721A.sol";
 
-contract FakePunks is ERC721A {
-    constructor() ERC721A("Fake Wrapped Cryptopunks", "FWPUNKS") {}
+contract FakeBoredApeYachtClub is ERC721A {
+    constructor() ERC721A("Fake Bored Ape Yacht Club", "FBAYC") {}
 
     function mint(address to, uint256 quantity) public {
         _mint(to, quantity);
@@ -18,28 +18,27 @@ contract FakePunks is ERC721A {
         return
             string(
                 abi.encodePacked(
-                    "https://wrappedpunks.com:3000/api/punks/metadata/",
+                    "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/",
                     _toString(tokenId)
                 )
             );
     }
 }
 
-contract CreateFakePunksScript is Script {
+contract CreateFakeBoredApeYachtClubScript is Script {
     function setUp() public {}
 
     function run() public {
         vm.startBroadcast();
 
-        FakePunks fakePunks = new FakePunks();
-        console.log("fake punks:");
-        console.log(address(fakePunks));
+        FakeBoredApeYachtClub fakeBoredApeYachtClub = new FakeBoredApeYachtClub();
+        console.log("fake bayc:", address(fakeBoredApeYachtClub));
 
-        fakePunks.mint(msg.sender, 250);
-        fakePunks.mint(msg.sender, 250);
-        fakePunks.mint(msg.sender, 250);
-        fakePunks.mint(msg.sender, 250);
-        fakePunks.mint(msg.sender, 250);
-        fakePunks.mint(msg.sender, 250);
+        fakeBoredApeYachtClub.mint(msg.sender, 250);
+        fakeBoredApeYachtClub.mint(msg.sender, 250);
+        fakeBoredApeYachtClub.mint(msg.sender, 250);
+        fakeBoredApeYachtClub.mint(msg.sender, 250);
+        fakeBoredApeYachtClub.mint(msg.sender, 250);
+        fakeBoredApeYachtClub.mint(msg.sender, 250);
     }
 }

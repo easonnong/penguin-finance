@@ -12,6 +12,11 @@ contract CreatePairScript is Script {
 
     function run() public {
         vm.broadcast();
+
+        address penguin = vm.envAddress("PENGUIN_ADDRESS");
+        address nft = vm.envAddress("NFT_ADDRESS");
+
+        create(nft, address(0), "bored-ape-yacht-club.json", penguin);
     }
 
     function create(
