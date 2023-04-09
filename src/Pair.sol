@@ -83,6 +83,12 @@ contract Pair is ERC20, ERC721TokenReceiver {
         uint256 fractionalTokenAmount,
         uint256 minLpTokenAmount
     ) public payable returns (uint256 lpTokenAmount) {
+        // *** Checks *** //
+        require(
+            baseTokenAmount > 0 && fractionalTokenAmount > 0,
+            "Input token amount is zero"
+        );
+
         lpTokenAmount = addQuote(baseTokenAmount, fractionalTokenAmount);
 
         // check that the amount of lp tokens outputted is greater than the min amount
@@ -315,10 +321,12 @@ contract Pair is ERC20, ERC721TokenReceiver {
     //      Wrap logic      //
     // ******************** //
 
-    function wrap(uint256[] calldata tokenIds) public returns (uint256) {
+    function wrap(
+        uint256[] calldata tokenIds
+    ) public returns (uint256 fractionalTokenAmount) {
         // *** Checks *** //
         require(closeTimestamp == 0, "Wrap: closed");
-        uint256 fractionalTokenAmount = tokenIds.length * ONE;
+        fractionalTokenAmount = tokenIds.length * ONE;
 
         // mint fractional tokens to sender
         _mint(msg.sender, fractionalTokenAmount);
@@ -335,8 +343,6 @@ contract Pair is ERC20, ERC721TokenReceiver {
         }
 
         emit Wrap(tokenIds);
-
-        return fractionalTokenAmount;
     }
 
     function unwrap(uint256[] calldata tokenIds) public returns (uint256) {
