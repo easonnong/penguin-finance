@@ -2,7 +2,7 @@
 pragma solidity 0.8.17;
 
 import "./Pair.sol";
-import "./SafeERC20Namer.sol";
+import "lib/SafeERC20Namer.sol";
 
 contract Penguin {
     using SafeERC20Namer for address;

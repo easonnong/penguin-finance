@@ -20,6 +20,21 @@ contract Pair is ERC20, ERC721TokenReceiver {
     address public immutable lpToken;
     bytes32 public immutable merkleRoot;
 
+    event Add(
+        uint256 baseTokenAmount,
+        uint256 fractionalTokenAmount,
+        uint256 lpTokenAmount
+    );
+    event Remove(
+        uint256 baseTokenAmount,
+        uint256 fractionalTokenAmount,
+        uint256 lpTokenAmount
+    );
+    event Buy(uint256 inputAmount, uint256 outputAmount);
+    event Sell(uint256 inputAmount, uint256 outputAmount);
+    event Wrap(uint256[] tokenIds);
+    event Unwrap(uint256[] tokenIds);
+
     constructor(
         address _nft,
         address _baseToken,
@@ -106,6 +121,8 @@ contract Pair is ERC20, ERC721TokenReceiver {
         // mint lp tokens to sender
         LpToken(lpToken).mint(msg.sender, lpTokenAmount);
 
+        emit Add(baseTokenAmount, fractionalTokenAmount, lpTokenAmount);
+
         return lpTokenAmount;
     }
 
@@ -150,6 +167,8 @@ contract Pair is ERC20, ERC721TokenReceiver {
             );
         }
 
+        emit Buy(inputAmount, outputAmount);
+
         return inputAmount;
     }
 
@@ -172,6 +191,8 @@ contract Pair is ERC20, ERC721TokenReceiver {
             // transfer base tokens out
             ERC20(baseToken).transfer(msg.sender, outputAmount);
         }
+
+        emit Sell(inputAmount, outputAmount);
 
         return outputAmount;
     }
@@ -208,6 +229,9 @@ contract Pair is ERC20, ERC721TokenReceiver {
 
         // *** Interactions *** //
 
+        // burn lp tokens from sender
+        LpToken(lpToken).burn(msg.sender, lpTokenAmount);
+
         if (baseToken == address(0)) {
             // transfer ether out
             msg.sender.safeTransferETH(baseTokenOutputAmount);
@@ -216,8 +240,11 @@ contract Pair is ERC20, ERC721TokenReceiver {
             ERC20(baseToken).transfer(msg.sender, baseTokenOutputAmount);
         }
 
-        // burn lp tokens from sender
-        LpToken(lpToken).burn(msg.sender, lpTokenAmount);
+        emit Remove(
+            baseTokenOutputAmount,
+            fractionalTokenOutputAmount,
+            lpTokenAmount
+        );
 
         return (baseTokenOutputAmount, fractionalTokenOutputAmount);
     }
@@ -312,6 +339,8 @@ contract Pair is ERC20, ERC721TokenReceiver {
             );
         }
 
+        emit Wrap(tokenIds);
+
         return fractionalTokenAmount;
     }
 
@@ -332,6 +361,8 @@ contract Pair is ERC20, ERC721TokenReceiver {
                 tokenIds[i]
             );
         }
+
+        emit Unwrap(tokenIds);
 
         return fractionalTokenAmount;
     }
