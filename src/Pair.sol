@@ -19,12 +19,27 @@ contract Pair is ERC20, ERC721TokenReceiver {
 
     constructor(
         address _nft,
-        address _baseToken
-    ) ERC20("Fractional token", "FT", 18) {
+        address _baseToken,
+        string memory pairSymbol,
+        string memory nftName,
+        string memory nftSymbol
+    )
+        ERC20(
+            string.concat(nftName, " fractional token"),
+            string.concat("f", nftSymbol),
+            18
+        )
+    {
         nft = _nft;
         baseToken = _baseToken; // set to be address(0) for native ETH
 
-        lpToken = address(new LpToken("LP token", "LPT", 18));
+        lpToken = address(
+            new LpToken(
+                string.concat(pairSymbol, " LP token"),
+                string.concat("LP-", pairSymbol),
+                18
+            )
+        );
     }
 
     // ******************* //
