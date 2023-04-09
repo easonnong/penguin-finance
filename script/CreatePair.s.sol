@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity 0.8.17;
 
 import "forge-std/Script.sol";
 import "solmate/utils/LibString.sol";
@@ -29,10 +29,9 @@ contract CreatePairScript is Script {
         return pair;
     }
 
-    function generateMerkleRoot(string memory rankingFile)
-        public
-        returns (bytes32)
-    {
+    function generateMerkleRoot(
+        string memory rankingFile
+    ) public returns (bytes32) {
         string[] memory inputs = new string[](3);
 
         inputs[0] = "node";
