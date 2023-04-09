@@ -190,6 +190,24 @@ contract Pair is ERC20, ERC721TokenReceiver {
         return lpTokenAmount;
     }
 
+    function nftRemove(
+        uint256 lpTokenAmount,
+        uint256 minBaseTokenOutputAmount,
+        uint256[] calldata tokenIds
+    ) public returns (uint256, uint256) {
+        (
+            uint256 baseTokenOutputAmount,
+            uint256 fractionalTokenOutputAmount
+        ) = remove(
+                lpTokenAmount,
+                minBaseTokenOutputAmount,
+                tokenIds.length * 1e18
+            );
+        unwrap(tokenIds);
+
+        return (baseTokenOutputAmount, fractionalTokenOutputAmount);
+    }
+
     function nftBuy(
         uint256[] calldata tokenIds,
         uint256 maxInputAmount
