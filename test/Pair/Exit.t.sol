@@ -36,7 +36,7 @@ contract WrapTest is Fixture, ERC721TokenReceiver {
     function testCannotExitIfNotAdmin() public {
         // act
         vm.prank(address(0xabc));
-        vm.expectRevert("Exit: not creator");
+        vm.expectRevert("Exit: not owner");
         pair.exit();
 
         // assert
@@ -53,7 +53,7 @@ contract WrapTest is Fixture, ERC721TokenReceiver {
 
         // act
         vm.prank(address(0xabc));
-        vm.expectRevert("Withdraw: not creator");
+        vm.expectRevert("Withdraw: not owner");
         pair.withdraw(1);
     }
 
