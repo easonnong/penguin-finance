@@ -29,6 +29,13 @@ contract SellTest is Fixture {
         // (inputAmount * pair.fractionalTokenReserves()) /
         // (pair.baseTokenReserves() + inputAmount);
         deal(address(pair), address(this), inputAmount, true);
+        deal(address(ethPair), address(this), fractionalTokenAmount, true);
+        ethPair.add{value: baseTokenAmount}(
+            baseTokenAmount,
+            fractionalTokenAmount,
+            minLpTokenAmount
+        );
+        deal(address(ethPair), address(this), inputAmount, true);
     }
 
     function testItReturnsOutputAmount() public {
@@ -95,5 +102,26 @@ contract SellTest is Fixture {
         // act
         vm.expectRevert("Slippage: amount out");
         pair.sell(inputAmount, minOutputAmount);
+    }
+
+    function testItTransfersEther() public {
+        // arrange
+        uint256 balanceBefore = address(ethPair).balance;
+        uint256 thisBalanceBefore = address(this).balance;
+
+        // act
+        ethPair.sell(inputAmount, minOutputAmount);
+
+        // assert
+        assertEq(
+            balanceBefore - address(ethPair).balance,
+            minOutputAmount,
+            "Should have transferred ether from pair"
+        );
+        assertEq(
+            address(this).balance - thisBalanceBefore,
+            minOutputAmount,
+            "Should have transferred ether to sender"
+        );
     }
 }

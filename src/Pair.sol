@@ -4,10 +4,13 @@ pragma solidity 0.8.17;
 import "solmate/tokens/ERC20.sol";
 import "solmate/tokens/ERC721.sol";
 import "openzeppelin/utils/math/Math.sol";
+import "solmate/utils/SafeTransferLib.sol";
 
 import "./LpToken.sol";
 
 contract Pair is ERC20, ERC721TokenReceiver {
+    using SafeTransferLib for address;
+
     uint256 public constant ONE = 1e18;
 
     address public immutable nft; // address of the NFT
@@ -19,14 +22,14 @@ contract Pair is ERC20, ERC721TokenReceiver {
         address _baseToken
     ) ERC20("Fractional token", "FT", 18) {
         nft = _nft;
-        baseToken = _baseToken;
+        baseToken = _baseToken; // set to be address(0) for native ETH
 
         lpToken = address(new LpToken("LP token", "LPT", 18));
     }
 
-    // ====================== //
-    // ===== AMM logic ===== //
-    // ====================== //
+    // ******************* //
+    //      AMM logic      //
+    // ******************  //
 
     /**
      * @dev Adds liquidity to the pool
@@ -39,7 +42,7 @@ contract Pair is ERC20, ERC721TokenReceiver {
         uint256 baseTokenAmount,
         uint256 fractionalTokenAmount,
         uint256 minLpTokenAmount
-    ) public returns (uint256) {
+    ) public payable returns (uint256) {
         uint256 lpTokenSupply = ERC20(lpToken).totalSupply();
         uint256 lpTokenAmount;
 
@@ -61,12 +64,23 @@ contract Pair is ERC20, ERC721TokenReceiver {
             "Slippage: lp token amount out"
         );
 
-        // transfer tokens in
-        ERC20(baseToken).transferFrom(
-            msg.sender,
-            address(this),
-            baseTokenAmount
+        // check that correct eth input was sent; if the baseToken equals address(0) then native ETH is used
+        require(
+            baseToken == address(0)
+                ? msg.value == baseTokenAmount
+                : msg.value == 0,
+            "Invalid ether input"
         );
+
+        if (baseToken != address(0)) {
+            // transfer base tokens in
+            // transfer tokens in
+            ERC20(baseToken).transferFrom(
+                msg.sender,
+                address(this),
+                baseTokenAmount
+            );
+        }
         _transferFrom(msg.sender, address(this), fractionalTokenAmount);
 
         // mint lp tokens to sender
@@ -84,7 +98,7 @@ contract Pair is ERC20, ERC721TokenReceiver {
     function buy(
         uint256 outputAmount,
         uint256 maxInputAmount
-    ) public returns (uint256) {
+    ) public payable returns (uint256) {
         // x * y = k
         // Calculate the required amount of base tokens to buy the output amount of fractional tokens
         // (baseTokenReserves + inputAmount)*(fractionalTokenReserves - outputAmount) = baseTokenReserves * fractionalTokenReserves
@@ -97,11 +111,30 @@ contract Pair is ERC20, ERC721TokenReceiver {
         // check that the required amount of base tokens is less than the max amount
         require(inputAmount <= maxInputAmount, "Slippage: amount in");
 
+        // check that correct eth input was sent; if the baseToken equals address(0) then native ETH is used
+        require(
+            baseToken == address(0)
+                ? msg.value == maxInputAmount
+                : msg.value == 0,
+            "Invalid ether input"
+        );
+
         // transfer fractional tokens to sender
         _transferFrom(address(this), msg.sender, outputAmount);
 
-        // transfer base token in
-        ERC20(baseToken).transferFrom(msg.sender, address(this), inputAmount);
+        if (baseToken == address(0)) {
+            // refund surplus eth
+            uint256 refundAmount = maxInputAmount - inputAmount;
+            if (refundAmount > 0)
+                msg.sender.safeTransferETH(maxInputAmount - inputAmount);
+        } else {
+            // transfer base tokens in
+            ERC20(baseToken).transferFrom(
+                msg.sender,
+                address(this),
+                inputAmount
+            );
+        }
 
         return inputAmount;
     }
@@ -124,8 +157,13 @@ contract Pair is ERC20, ERC721TokenReceiver {
         // transfer fractional tokens from sender
         _transferFrom(msg.sender, address(this), inputAmount);
 
-        // transfer base tokens out
-        ERC20(baseToken).transfer(msg.sender, outputAmount);
+        if (baseToken == address(0)) {
+            // transfer ether out
+            msg.sender.safeTransferETH(outputAmount);
+        } else {
+            // transfer base tokens out
+            ERC20(baseToken).transfer(msg.sender, outputAmount);
+        }
 
         return outputAmount;
     }
@@ -142,7 +180,7 @@ contract Pair is ERC20, ERC721TokenReceiver {
         uint256 fractionalTokenOutputAmount = (fractionalTokenReserves() *
             lpTokenAmount) / lpTokenSupply;
 
-        // ~~~~~~ Checks ~~~~~~ //
+        // *** Checks *** //
 
         // check that the base token output amount is greater than the min amount
         require(
@@ -155,15 +193,20 @@ contract Pair is ERC20, ERC721TokenReceiver {
             "Slippage: fractional token amount out"
         );
 
-        // ~~~~~~ Effects ~~~~~~ //
+        // *** Effects *** //
 
         // transfer fractional tokens to sender
         _transferFrom(address(this), msg.sender, fractionalTokenOutputAmount);
 
-        // ~~~~~~ Interactions ~~~~~~ //
+        // *** Interactions *** //
 
-        // transfer base tokens to sender
-        ERC20(baseToken).transfer(msg.sender, baseTokenOutputAmount);
+        if (baseToken == address(0)) {
+            // transfer ether out
+            msg.sender.safeTransferETH(baseTokenOutputAmount);
+        } else {
+            // transfer base tokens to sender
+            ERC20(baseToken).transfer(msg.sender, baseTokenOutputAmount);
+        }
 
         // burn lp tokens from sender
         LpToken(lpToken).burn(msg.sender, lpTokenAmount);
@@ -171,9 +214,9 @@ contract Pair is ERC20, ERC721TokenReceiver {
         return (baseTokenOutputAmount, fractionalTokenOutputAmount);
     }
 
-    // ========================= //
-    // ===== NFT AMM logic ===== //
-    // ========================= //
+    // *********************** //
+    //      NFT AMM logic      //
+    // *********************** //
 
     function nftAdd(
         uint256 baseTokenAmount,
@@ -228,18 +271,18 @@ contract Pair is ERC20, ERC721TokenReceiver {
         return outputAmount;
     }
 
-    // ====================== //
-    // ===== Wrap logic ===== //
-    // ====================== //
+    // ******************** //
+    //      Wrap logic      //
+    // ******************** //
 
     function wrap(uint256[] calldata tokenIds) public returns (uint256) {
-        // ~~~~~~ Effects ~~~~~~ //
+        // *** Effects *** //
         uint256 fractionalTokenAmount = tokenIds.length * ONE;
 
         // mint fractional tokens to sender
         _mint(msg.sender, fractionalTokenAmount);
 
-        // ~~~~~~ Interactions ~~~~~~ //
+        // *** Interactions *** //
 
         // transfer nfts from sender
         for (uint256 i = 0; i < tokenIds.length; i++) {
@@ -254,13 +297,13 @@ contract Pair is ERC20, ERC721TokenReceiver {
     }
 
     function unwrap(uint256[] calldata tokenIds) public returns (uint256) {
-        // ~~~~~~ Effects ~~~~~~ //
+        // *** Effects *** //
         uint256 fractionalTokenAmount = tokenIds.length * ONE;
 
         // burn fractional tokens from sender
         _burn(msg.sender, fractionalTokenAmount);
 
-        // ~~~~~~ Interactions ~~~~~~ //
+        // *** Interactions *** //
 
         // transfer nfts to sender
         for (uint256 i = 0; i < tokenIds.length; i++) {
@@ -274,9 +317,9 @@ contract Pair is ERC20, ERC721TokenReceiver {
         return fractionalTokenAmount;
     }
 
-    // ========================== //
-    // ===== Internal utils ===== //
-    // ========================== //
+    // ************************ //
+    //      Internal utils      //
+    // ************************ //
 
     function _transferFrom(
         address from,
@@ -296,9 +339,9 @@ contract Pair is ERC20, ERC721TokenReceiver {
         return true;
     }
 
-    // =================== //
-    // ===== Getters ===== //
-    // =================== //
+    // ***************** //
+    //      Getters      //
+    // ***************** //
 
     /**
      * @dev Returns the current price of the pair
@@ -318,7 +361,7 @@ contract Pair is ERC20, ERC721TokenReceiver {
      * @return The base token reserves
      */
     function baseTokenReserves() public view returns (uint256) {
-        return ERC20(baseToken).balanceOf(address(this));
+        return _baseTokenReserves();
     }
 
     /**
@@ -327,6 +370,13 @@ contract Pair is ERC20, ERC721TokenReceiver {
      */
     function fractionalTokenReserves() public view returns (uint256) {
         return balanceOf[address(this)];
+    }
+
+    function _baseTokenReserves() internal view returns (uint256) {
+        return
+            baseToken == address(0)
+                ? address(this).balance - msg.value
+                : ERC20(baseToken).balanceOf(address(this));
     }
 
     /**

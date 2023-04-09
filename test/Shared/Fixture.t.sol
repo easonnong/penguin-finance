@@ -11,10 +11,12 @@ import "./Mocks/MockERC20.sol";
 contract Fixture is Test {
     MockERC721 public bayc;
     MockERC20 public usd;
-    LpToken public lpToken;
 
     Penguin public penguin;
     Pair public pair;
+    LpToken public lpToken;
+    Pair public ethPair;
+    LpToken public ethPairLpToken;
 
     address public hacker = address(0x123);
 
@@ -27,11 +29,18 @@ contract Fixture is Test {
         pair = penguin.create(address(bayc), address(usd));
         lpToken = LpToken(pair.lpToken());
 
+        ethPair = penguin.create(address(bayc), address(0));
+        ethPairLpToken = LpToken(ethPair.lpToken());
+
         vm.label(hacker, "hacker");
         vm.label(address(penguin), "penguin");
         vm.label(address(bayc), "bayc");
         vm.label(address(usd), "usd");
         vm.label(address(pair), "pair");
         vm.label(address(lpToken), "LP-token");
+        vm.label(address(ethPair), "ethPair");
+        vm.label(address(ethPairLpToken), "ethPair-LP-token");
     }
+
+    receive() external payable {}
 }

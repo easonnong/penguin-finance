@@ -14,6 +14,7 @@ contract BuyTest is Fixture {
 
         deal(address(usd), address(this), baseTokenAmount, true);
         deal(address(pair), address(this), fractionalTokenAmount, true);
+        deal(address(ethPair), address(this), fractionalTokenAmount, true);
 
         usd.approve(address(pair), type(uint256).max);
 
@@ -23,6 +24,11 @@ contract BuyTest is Fixture {
         maxInputAmount = pair.buyQuote(outputAmount);
 
         deal(address(usd), address(this), maxInputAmount, true);
+        ethPair.add{value: baseTokenAmount}(
+            baseTokenAmount,
+            fractionalTokenAmount,
+            minLpTokenAmount
+        );
     }
 
     function testItReturnsInputAmount() public {
@@ -89,5 +95,61 @@ contract BuyTest is Fixture {
         // act
         vm.expectRevert("Slippage: amount in");
         pair.buy(outputAmount, maxInputAmount);
+    }
+
+    function testItRevertsIfValueIsGreaterThanZeroAndBaseTokenIsNot0() public {
+        // act
+        vm.expectRevert("Invalid ether input");
+        pair.buy{value: maxInputAmount}(outputAmount, maxInputAmount);
+    }
+
+    function testItTransfersEther() public {
+        // arrange
+        uint256 balanceBefore = address(ethPair).balance;
+        uint256 thisBalanceBefore = address(this).balance;
+
+        // act
+        ethPair.buy{value: maxInputAmount}(outputAmount, maxInputAmount);
+
+        // assert
+        assertEq(
+            address(ethPair).balance - balanceBefore,
+            maxInputAmount,
+            "Should have transferred ether to pair"
+        );
+        assertEq(
+            thisBalanceBefore - address(this).balance,
+            maxInputAmount,
+            "Should have transferred ether from sender"
+        );
+    }
+
+    function testItRefundsSurplusEther() public {
+        // arrange
+        uint256 surplus = 500;
+        maxInputAmount += surplus;
+        uint256 balanceBefore = address(ethPair).balance;
+        uint256 thisBalanceBefore = address(this).balance;
+
+        // act
+        ethPair.buy{value: maxInputAmount}(outputAmount, maxInputAmount);
+
+        // assert
+        assertEq(
+            address(ethPair).balance - balanceBefore,
+            maxInputAmount - surplus,
+            "Should have transferred ether to pair"
+        );
+        assertEq(
+            thisBalanceBefore - address(this).balance,
+            maxInputAmount - surplus,
+            "Should have transferred ether from sender"
+        );
+    }
+
+    function testItRevertsIfMaxInputAmountIsNotEqualToValue() public {
+        // act
+        vm.expectRevert("Invalid ether input");
+        ethPair.buy{value: maxInputAmount + 100}(outputAmount, maxInputAmount);
     }
 }
