@@ -16,6 +16,7 @@ contract Penguin {
         address baseToken,
         bytes32 merkleRoot
     ) public returns (Pair) {
+        // check that the pair doesn't already exist
         require(
             pairs[nft][baseToken][merkleRoot] == address(0),
             "Pair already exists"
