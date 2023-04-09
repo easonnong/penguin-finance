@@ -4,7 +4,7 @@ pragma solidity 0.8.17;
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 
-import "../shared/Fixture.t.sol";
+import "../Shared/Fixture.t.sol";
 import "../../src/Penguin.sol";
 
 contract RemoveTest is Fixture {
