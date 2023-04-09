@@ -22,9 +22,9 @@ contract Pair is ERC20, ERC721TokenReceiver {
 
     address public immutable nft; // address of the NFT
     address public immutable baseToken; // address(0) for ETH
-    address public immutable lpToken;
     bytes32 public immutable merkleRoot;
 
+    LpToken public immutable lpToken;
     IPenguin public immutable penguin;
 
     uint256 public closeTimestamp;
@@ -66,7 +66,7 @@ contract Pair is ERC20, ERC721TokenReceiver {
 
         penguin = IPenguin(msg.sender);
 
-        lpToken = address(new LpToken(pairSymbol));
+        lpToken = new LpToken(pairSymbol);
     }
 
     // ******************* //
@@ -112,7 +112,7 @@ contract Pair is ERC20, ERC721TokenReceiver {
         _transferFrom(msg.sender, address(this), fractionalTokenAmount);
 
         // mint lp tokens to sender
-        LpToken(lpToken).mint(msg.sender, lpTokenAmount);
+        lpToken.mint(msg.sender, lpTokenAmount);
 
         emit Add(baseTokenAmount, fractionalTokenAmount, lpTokenAmount);
     }
@@ -123,11 +123,10 @@ contract Pair is ERC20, ERC721TokenReceiver {
      * @param maxInputAmount The maximum amount of base tokens to spend
      * @return The amount of base tokens spent
      */
-    function buy(uint256 outputAmount, uint256 maxInputAmount)
-        public
-        payable
-        returns (uint256)
-    {
+    function buy(
+        uint256 outputAmount,
+        uint256 maxInputAmount
+    ) public payable returns (uint256) {
         // inputAmount = (baseTokenReserves*outputAmount) / (fractionalTokenReserves - outputAmount)
         uint256 inputAmount = buyQuote(outputAmount);
 
@@ -227,7 +226,7 @@ contract Pair is ERC20, ERC721TokenReceiver {
         // *** Interactions *** //
 
         // burn lp tokens from sender
-        LpToken(lpToken).burn(msg.sender, lpTokenAmount);
+        lpToken.burn(msg.sender, lpTokenAmount);
 
         if (baseToken == address(0)) {
             // transfer ether out
@@ -317,7 +316,7 @@ contract Pair is ERC20, ERC721TokenReceiver {
     // ******************** //
 
     function wrap(uint256[] calldata tokenIds) public returns (uint256) {
-        // *** Effects *** //
+        // *** Checks *** //
         require(closeTimestamp == 0, "Wrap: closed");
         uint256 fractionalTokenAmount = tokenIds.length * ONE;
 
@@ -504,12 +503,11 @@ contract Pair is ERC20, ERC721TokenReceiver {
     /// @param baseTokenAmount The amount of base tokens to add.
     /// @param fractionalTokenAmount The amount of fractional tokens to add.
     /// @return lpTokenAmount The amount of lp tokens received.
-    function addQuote(uint256 baseTokenAmount, uint256 fractionalTokenAmount)
-        public
-        view
-        returns (uint256)
-    {
-        uint256 lpTokenSupply = ERC20(lpToken).totalSupply();
+    function addQuote(
+        uint256 baseTokenAmount,
+        uint256 fractionalTokenAmount
+    ) public view returns (uint256) {
+        uint256 lpTokenSupply = lpToken.totalSupply();
         if (lpTokenSupply > 0) {
             uint256 baseTokenShare = (baseTokenAmount * lpTokenSupply) /
                 baseTokenReserves();
@@ -527,12 +525,10 @@ contract Pair is ERC20, ERC721TokenReceiver {
     /// @param lpTokenAmount The amount of lp tokens to burn.
     /// @return baseTokenAmount The amount of base tokens received.
     /// @return fractionalTokenAmount The amount of fractional tokens received.
-    function removeQuote(uint256 lpTokenAmount)
-        public
-        view
-        returns (uint256, uint256)
-    {
-        uint256 lpTokenSupply = ERC20(lpToken).totalSupply();
+    function removeQuote(
+        uint256 lpTokenAmount
+    ) public view returns (uint256, uint256) {
+        uint256 lpTokenSupply = lpToken.totalSupply();
         uint256 baseTokenOutputAmount = (baseTokenReserves() * lpTokenAmount) /
             lpTokenSupply;
         uint256 fractionalTokenOutputAmount = (fractionalTokenReserves() *

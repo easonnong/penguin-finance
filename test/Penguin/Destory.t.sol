@@ -17,6 +17,8 @@ contract DestroyTest is Fixture {
     function setUp() public {
         prankedAddress = address(0xbabe);
 
+        // forgefmt: disable-next-item
+
         stdstore
             .target(address(penguin))
             .sig("pairs(address,address,bytes32)")
@@ -63,6 +65,9 @@ contract DestroyTest is Fixture {
         address _prankedAddress
     ) public {
         // arrange
+
+        // forgefmt: disable-next-item
+
         stdstore
             .target(address(penguin))
             .sig("pairs(address,address,bytes32)")
