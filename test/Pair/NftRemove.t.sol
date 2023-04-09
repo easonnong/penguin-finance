@@ -47,7 +47,12 @@ contract NftRemoveTest is Fixture, ERC721TokenReceiver {
 
         // act
         (uint256 baseTokenAmount, uint256 fractionalTokenAmount) = pair
-            .nftRemove(lpTokenAmount, expectedBaseTokenAmount, tokenIds);
+            .nftRemove(
+                lpTokenAmount,
+                expectedBaseTokenAmount,
+                tokenIds,
+                proofs
+            );
 
         // assert
         assertEq(
@@ -73,7 +78,12 @@ contract NftRemoveTest is Fixture, ERC721TokenReceiver {
         uint256 totalSupplyBefore = lpToken.totalSupply();
 
         // act
-        pair.nftRemove(lpTokenAmount, minBaseTokenOutputAmount, tokenIds);
+        pair.nftRemove(
+            lpTokenAmount,
+            minBaseTokenOutputAmount,
+            tokenIds,
+            proofs
+        );
 
         // assert
         assertEq(
@@ -99,7 +109,12 @@ contract NftRemoveTest is Fixture, ERC721TokenReceiver {
         uint256 balanceBefore = usd.balanceOf(address(pair));
 
         // act
-        pair.nftRemove(lpTokenAmount, minBaseTokenOutputAmount, tokenIds);
+        pair.nftRemove(
+            lpTokenAmount,
+            minBaseTokenOutputAmount,
+            tokenIds,
+            proofs
+        );
 
         // assert
         assertEq(
@@ -124,7 +139,12 @@ contract NftRemoveTest is Fixture, ERC721TokenReceiver {
             1e18) / pair.fractionalTokenReserves();
 
         // act
-        pair.nftRemove(lpTokenAmount, minBaseTokenOutputAmount, tokenIds);
+        pair.nftRemove(
+            lpTokenAmount,
+            minBaseTokenOutputAmount,
+            tokenIds,
+            proofs
+        );
 
         // assert
         for (uint256 i = 0; i < tokenIds.length; i++) {
@@ -147,7 +167,12 @@ contract NftRemoveTest is Fixture, ERC721TokenReceiver {
 
         // act
         vm.expectRevert("Slippage: fractional token amount out");
-        pair.nftRemove(lpTokenAmount, minBaseTokenOutputAmount, tokenIds);
+        pair.nftRemove(
+            lpTokenAmount,
+            minBaseTokenOutputAmount,
+            tokenIds,
+            proofs
+        );
     }
 
     function testItRevertsBaseTokenSlippage() public {
@@ -162,6 +187,76 @@ contract NftRemoveTest is Fixture, ERC721TokenReceiver {
 
         // act
         vm.expectRevert("Slippage: base token amount out");
-        pair.nftRemove(lpTokenAmount, minBaseTokenOutputAmount, tokenIds);
+        pair.nftRemove(
+            lpTokenAmount,
+            minBaseTokenOutputAmount,
+            tokenIds,
+            proofs
+        );
+    }
+
+    function testItRemovesWithMerkleProof() public {
+        // arrange
+        deal(address(usd), address(this), totalBaseTokenAmount, true);
+        delete tokenIds;
+        for (uint256 i = 0; i < 6; i++) {
+            bayc.mint(address(this), i + 6);
+            tokenIds.push(i + 6);
+        }
+
+        Pair pair = createPairScript.create(
+            address(bayc),
+            address(usd),
+            "YEET-mids.json",
+            address(penguin)
+        );
+        proofs = createPairScript.generateMerkleProofs(
+            "YEET-mids.json",
+            tokenIds
+        );
+
+        bayc.setApprovalForAll(address(pair), true);
+        usd.approve(address(pair), type(uint256).max);
+
+        uint256 minLpTokenAmount = totalBaseTokenAmount *
+            tokenIds.length *
+            1e18;
+        totalLpTokenAmount = pair.nftAdd(
+            totalBaseTokenAmount,
+            tokenIds,
+            minLpTokenAmount,
+            proofs
+        );
+
+        tokenIds.pop();
+        tokenIds.pop();
+        tokenIds.pop();
+
+        uint256 lpTokenAmount = (totalLpTokenAmount * tokenIds.length * 1e18) /
+            pair.fractionalTokenReserves();
+        uint256 minBaseTokenOutputAmount = (totalBaseTokenAmount *
+            tokenIds.length *
+            1e18) / pair.fractionalTokenReserves();
+        proofs = createPairScript.generateMerkleProofs(
+            "YEET-mids.json",
+            tokenIds
+        );
+
+        // act
+        pair.nftRemove(
+            lpTokenAmount,
+            minBaseTokenOutputAmount,
+            tokenIds,
+            proofs
+        );
+
+        // assert
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            assertEq(
+                bayc.ownerOf(tokenIds[i]),
+                address(this),
+                "Should have sent bayc to sender"
+            );
+        }
     }
 }

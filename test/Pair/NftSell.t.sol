@@ -7,6 +7,7 @@ import "../../src/Penguin.sol";
 contract NftSellTest is Fixture {
     uint256 public minOutputAmount;
     uint256[] public tokenIds;
+    bytes32[][] public proofs;
 
     function setUp() public {
         uint256 baseTokenAmount = 100;
@@ -36,7 +37,11 @@ contract NftSellTest is Fixture {
         uint256 expectedOutputAmount = minOutputAmount;
 
         // act
-        uint256 outputAmount = pair.nftSell(tokenIds, expectedOutputAmount);
+        uint256 outputAmount = pair.nftSell(
+            tokenIds,
+            expectedOutputAmount,
+            proofs
+        );
 
         // assert
         assertEq(
@@ -52,7 +57,7 @@ contract NftSellTest is Fixture {
         uint256 thisBalanceBefore = usd.balanceOf(address(this));
 
         // act
-        pair.nftSell(tokenIds, minOutputAmount);
+        pair.nftSell(tokenIds, minOutputAmount, proofs);
 
         // assert
         assertEq(
@@ -70,7 +75,7 @@ contract NftSellTest is Fixture {
 
     function testItTransfersNfts() public {
         // act
-        pair.nftSell(tokenIds, minOutputAmount);
+        pair.nftSell(tokenIds, minOutputAmount, proofs);
 
         // assert
         for (uint256 i = 0; i < tokenIds.length; i++) {
@@ -88,7 +93,7 @@ contract NftSellTest is Fixture {
 
         // act
         vm.expectRevert("Slippage: amount out");
-        pair.nftSell(tokenIds, minOutputAmount);
+        pair.nftSell(tokenIds, minOutputAmount, proofs);
     }
 
     function testItMintsFractionalTokens() public {
@@ -97,7 +102,7 @@ contract NftSellTest is Fixture {
         uint256 balanceBefore = pair.balanceOf(address(pair));
 
         // act
-        pair.nftSell(tokenIds, minOutputAmount);
+        pair.nftSell(tokenIds, minOutputAmount, proofs);
 
         // assert
         assertEq(
@@ -110,5 +115,42 @@ contract NftSellTest is Fixture {
             tokenIds.length * 1e18,
             "Should have minted fractional tokens to pair"
         );
+    }
+
+    function testItSellsWithMerkleProof() public {
+        Pair pair = createPairScript.create(
+            address(bayc),
+            address(usd),
+            "YEET-mids.json",
+            address(penguin)
+        );
+
+        uint256 baseTokenAmount = 69.69e18;
+        uint256 fractionalTokenAmount = 420.42e18;
+
+        deal(address(usd), address(this), baseTokenAmount, true);
+        deal(address(pair), address(this), fractionalTokenAmount, true);
+        usd.approve(address(pair), type(uint256).max);
+
+        uint256 minLpTokenAmount = baseTokenAmount * fractionalTokenAmount;
+        pair.add(baseTokenAmount, fractionalTokenAmount, minLpTokenAmount);
+
+        proofs = createPairScript.generateMerkleProofs(
+            "YEET-mids.json",
+            tokenIds
+        );
+        bayc.setApprovalForAll(address(pair), true);
+
+        // act
+        pair.nftSell(tokenIds, minOutputAmount, proofs);
+
+        // assert
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            assertEq(
+                bayc.ownerOf(tokenIds[i]),
+                address(pair),
+                "Should have sent bayc to pair"
+            );
+        }
     }
 }

@@ -39,7 +39,7 @@ contract NftBuyTest is Fixture, ERC721TokenReceiver {
         uint256 expectedInputAmount = maxInputAmount;
 
         // act
-        uint256 inputAmount = pair.nftBuy(tokenIds, maxInputAmount);
+        uint256 inputAmount = pair.nftBuy(tokenIds, maxInputAmount, proofs);
 
         // assert
         assertEq(
@@ -55,7 +55,7 @@ contract NftBuyTest is Fixture, ERC721TokenReceiver {
         uint256 thisBalanceBefore = usd.balanceOf(address(this));
 
         // act
-        pair.nftBuy(tokenIds, maxInputAmount);
+        pair.nftBuy(tokenIds, maxInputAmount, proofs);
 
         // assert
         assertEq(
@@ -72,7 +72,7 @@ contract NftBuyTest is Fixture, ERC721TokenReceiver {
 
     function testItTransfersNfts() public {
         // act
-        pair.nftBuy(tokenIds, maxInputAmount);
+        pair.nftBuy(tokenIds, maxInputAmount, proofs);
 
         // assert
         for (uint256 i = 0; i < tokenIds.length; i++) {
@@ -90,7 +90,7 @@ contract NftBuyTest is Fixture, ERC721TokenReceiver {
 
         // act
         vm.expectRevert("Slippage: amount in");
-        pair.nftBuy(tokenIds, maxInputAmount);
+        pair.nftBuy(tokenIds, maxInputAmount, proofs);
     }
 
     function testItBurnsFractionalTokens() public {
@@ -98,7 +98,7 @@ contract NftBuyTest is Fixture, ERC721TokenReceiver {
         uint256 totalSupplyBefore = pair.totalSupply();
 
         // act
-        pair.nftBuy(tokenIds, maxInputAmount);
+        pair.nftBuy(tokenIds, maxInputAmount, proofs);
 
         // assert
         assertEq(
@@ -106,5 +106,50 @@ contract NftBuyTest is Fixture, ERC721TokenReceiver {
             tokenIds.length * 1e18,
             "Should have burned fractional tokens"
         );
+    }
+
+    function testItBuysWithMerkleProof() public {
+        // arrange
+        delete tokenIds;
+        for (uint256 i = 0; i < 5; i++) {
+            bayc.mint(address(this), i + 5);
+            tokenIds.push(i + 5);
+        }
+
+        Pair pair = createPairScript.create(
+            address(bayc),
+            address(usd),
+            "YEET-mids.json",
+            address(penguin)
+        );
+        proofs = createPairScript.generateMerkleProofs(
+            "YEET-mids.json",
+            tokenIds
+        );
+        bayc.setApprovalForAll(address(pair), true);
+        usd.approve(address(pair), type(uint256).max);
+        uint256 baseTokenAmount = 3.15e18;
+        uint256 minLpTokenAmount = baseTokenAmount * tokenIds.length * 1e18;
+        deal(address(usd), address(this), baseTokenAmount, true);
+        pair.nftAdd(baseTokenAmount, tokenIds, minLpTokenAmount, proofs);
+        tokenIds.pop();
+        tokenIds.pop();
+        proofs = createPairScript.generateMerkleProofs(
+            "YEET-mids.json",
+            tokenIds
+        );
+        deal(address(usd), address(this), maxInputAmount, true);
+
+        // act
+        pair.nftBuy(tokenIds, maxInputAmount, proofs);
+
+        // assert
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            assertEq(
+                bayc.ownerOf(tokenIds[i]),
+                address(this),
+                "Should have sent bayc to sender"
+            );
+        }
     }
 }
