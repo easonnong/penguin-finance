@@ -4,6 +4,12 @@ pragma solidity 0.8.17;
 import "../Shared/Fixture.t.sol";
 
 contract CreateTest is Fixture {
+    event Create(
+        address indexed nft,
+        address indexed baseToken,
+        bytes32 indexed merkleRoot
+    );
+
     function testItReturnsPair() public {
         // arrange
         address nft = address(0xbeef);
@@ -75,5 +81,33 @@ contract CreateTest is Fixture {
         // act
         vm.expectRevert("Pair already exists");
         penguin.create(nft, baseToken, merkleRoot);
+    }
+
+    function testItEmitsCreateEvent() public {
+        // arrange
+        address nft = address(0xbeef);
+        address baseToken = address(0xcafe);
+        bytes32 merkleRoot = bytes32(uint256(0xb00b));
+
+        // act
+        vm.expectEmit(true, true, true, true);
+        emit Create(nft, baseToken, merkleRoot);
+        penguin.create(nft, baseToken, merkleRoot);
+    }
+
+    function testItSavesPair(
+        address nft,
+        address baseToken,
+        bytes32 merkleRoot
+    ) public {
+        // act
+        address pair = address(penguin.create(nft, baseToken, merkleRoot));
+
+        // assert
+        assertEq(
+            penguin.pairs(nft, baseToken, merkleRoot),
+            pair,
+            "Should have saved pair address in pairs"
+        );
     }
 }

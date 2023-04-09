@@ -21,7 +21,7 @@ contract Penguin is Owned {
     event Create(
         address indexed nft,
         address indexed baseToken,
-        bytes32 merkleRoot
+        bytes32 indexed merkleRoot
     );
 
     /// @param nft The NFT contract address.
@@ -30,7 +30,7 @@ contract Penguin is Owned {
     event Destroy(
         address indexed nft,
         address indexed baseToken,
-        bytes32 merkleRoot
+        bytes32 indexed merkleRoot
     );
 
     constructor() Owned(msg.sender) {}
