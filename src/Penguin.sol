@@ -12,6 +12,12 @@ contract Penguin is Owned {
     mapping(address => mapping(address => mapping(bytes32 => address)))
         public pairs;
 
+    event Create(
+        address indexed nft,
+        address indexed baseToken,
+        bytes32 merkleRoot
+    );
+
     constructor() Owned(msg.sender) {}
 
     function create(
@@ -49,6 +55,8 @@ contract Penguin is Owned {
 
         // save the pair
         pairs[nft][baseToken][merkleRoot] = address(pair);
+
+        emit Create(nft, baseToken, merkleRoot);
 
         return pair;
     }

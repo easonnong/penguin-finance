@@ -21,7 +21,8 @@ contract Pair is ERC20, ERC721TokenReceiver {
     address public immutable lpToken;
     bytes32 public immutable merkleRoot;
 
-    address public immutable creator;
+    IPenguin public immutable penguin;
+
     uint256 public closeTimestamp;
 
     event Add(
@@ -57,7 +58,7 @@ contract Pair is ERC20, ERC721TokenReceiver {
         baseToken = _baseToken; // use address(0) for native ETH
         merkleRoot = _merkleRoot;
 
-        creator = msg.sender;
+        penguin = IPenguin(msg.sender);
 
         lpToken = address(new LpToken(pairSymbol));
     }
@@ -413,14 +414,17 @@ contract Pair is ERC20, ERC721TokenReceiver {
     // ****************************** //
 
     function exit() public {
-        require(IPenguin(creator).owner() == msg.sender, "Exit: not owner");
+        require(penguin.owner() == msg.sender, "Exit: not owner");
 
         closeTimestamp = block.timestamp;
+
+        // remove the pair from the Penguin contract
+        penguin.destroy(nft, baseToken, merkleRoot);
     }
 
     // used to withdraw nfts in case of liquidity imbalance
     function withdraw(uint256 tokenId) public {
-        require(IPenguin(creator).owner() == msg.sender, "Withdraw: not owner");
+        require(penguin.owner() == msg.sender, "Withdraw: not owner");
         require(closeTimestamp != 0, "Withdraw not initiated");
         require(
             block.timestamp >= closeTimestamp + 1 days,
