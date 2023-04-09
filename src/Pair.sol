@@ -11,10 +11,14 @@ import "openzeppelin/utils/cryptography/MerkleProof.sol";
 import "./LpToken.sol";
 import "./interfaces/IPenguin.sol";
 
+/// @title Pair
+/// @author easonnong
+/// @notice A pair of an NFT and a base token that can be used to create and trade fractionalized NFTs.
 contract Pair is ERC20, ERC721TokenReceiver {
     using SafeTransferLib for address;
 
     uint256 public constant ONE = 1e18;
+    uint256 public constant CLOSE_GRACE_PERIOD = 7 days;
 
     address public immutable nft; // address of the NFT
     address public immutable baseToken; // address of the base token
@@ -67,20 +71,17 @@ contract Pair is ERC20, ERC721TokenReceiver {
     //      AMM logic      //
     // ******************  //
 
-    /**
-     * @dev Adds liquidity to the pool
-     * @param baseTokenAmount The amount of base token to add
-     * @param fractionalTokenAmount The amount of fractional token to add
-     * @param minLpTokenAmount The minimum amount of LP token to receive
-     * @return The amount of LP tokens minted
-     */
+    /// @notice Adds liquidity to the pair.
+    /// @param baseTokenAmount The amount of base tokens to add.
+    /// @param fractionalTokenAmount The amount of fractional tokens to add.
+    /// @param minLpTokenAmount The minimum amount of LP tokens to mint.
+    /// @return lpTokenAmount The amount of LP tokens minted.
     function add(
         uint256 baseTokenAmount,
         uint256 fractionalTokenAmount,
         uint256 minLpTokenAmount
-    ) public payable returns (uint256) {
+    ) public payable returns (uint256 lpTokenAmount) {
         uint256 lpTokenSupply = ERC20(lpToken).totalSupply();
-        uint256 lpTokenAmount;
 
         if (lpTokenSupply > 0) {
             uint256 baseTokenShare = (baseTokenAmount * lpTokenSupply) /
@@ -123,8 +124,6 @@ contract Pair is ERC20, ERC721TokenReceiver {
         LpToken(lpToken).mint(msg.sender, lpTokenAmount);
 
         emit Add(baseTokenAmount, fractionalTokenAmount, lpTokenAmount);
-
-        return lpTokenAmount;
     }
 
     /**
@@ -198,6 +197,7 @@ contract Pair is ERC20, ERC721TokenReceiver {
         return outputAmount;
     }
 
+    /// @notice Removes liquidity from the pair.
     function remove(
         uint256 lpTokenAmount,
         uint256 minBaseTokenOutputAmount,
