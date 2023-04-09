@@ -7,6 +7,7 @@ import "../../src/Penguin.sol";
 import "../../src/Pair.sol";
 import "./Mocks/MockERC721.sol";
 import "./Mocks/MockERC20.sol";
+import "../../script/CreatePair.s.sol";
 
 contract Fixture is Test {
     MockERC721 public bayc;
@@ -18,18 +19,22 @@ contract Fixture is Test {
     Pair public ethPair;
     LpToken public ethPairLpToken;
 
+    CreatePairScript public createPairScript;
+
     address public hacker = address(0x123);
 
     constructor() {
+        createPairScript = new CreatePairScript();
+
         penguin = new Penguin();
 
         bayc = new MockERC721("Bored Ape", "BAYC");
         usd = new MockERC20("Us Dollar", "USD");
 
-        pair = penguin.create(address(bayc), address(usd));
+        pair = penguin.create(address(bayc), address(usd), bytes32(0));
         lpToken = LpToken(pair.lpToken());
 
-        ethPair = penguin.create(address(bayc), address(0));
+        ethPair = penguin.create(address(bayc), address(0), bytes32(0));
         ethPairLpToken = LpToken(ethPair.lpToken());
 
         vm.label(hacker, "hacker");

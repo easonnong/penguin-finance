@@ -7,6 +7,7 @@ import "../../src/Penguin.sol";
 contract NftAddTest is Fixture {
     uint256 public baseTokenAmount = 100 * 1e18;
     uint256[] public tokenIds;
+    bytes32[][] public proofs;
 
     function setUp() public {
         deal(address(usd), address(this), baseTokenAmount, true);
@@ -31,7 +32,8 @@ contract NftAddTest is Fixture {
         uint256 lpTokenAmount = pair.nftAdd(
             baseTokenAmount,
             tokenIds,
-            minLpTokenAmount
+            minLpTokenAmount,
+            proofs
         );
 
         // assert
@@ -58,7 +60,7 @@ contract NftAddTest is Fixture {
         uint256 balanceBefore = usd.balanceOf(address(this));
 
         // act
-        pair.nftAdd(baseTokenAmount, tokenIds, minLpTokenAmount);
+        pair.nftAdd(baseTokenAmount, tokenIds, minLpTokenAmount, proofs);
 
         // assert
         uint256 balanceAfter = usd.balanceOf(address(this));
@@ -79,7 +81,7 @@ contract NftAddTest is Fixture {
         uint256 minLpTokenAmount = baseTokenAmount * tokenIds.length;
 
         // act
-        pair.nftAdd(baseTokenAmount, tokenIds, minLpTokenAmount);
+        pair.nftAdd(baseTokenAmount, tokenIds, minLpTokenAmount, proofs);
 
         // assert
         for (uint256 i = 0; i < tokenIds.length; i++) {
@@ -98,7 +100,7 @@ contract NftAddTest is Fixture {
 
         // act
         vm.expectRevert("Slippage: lp token amount out");
-        pair.nftAdd(baseTokenAmount, tokenIds, minLpTokenAmount);
+        pair.nftAdd(baseTokenAmount, tokenIds, minLpTokenAmount, proofs);
     }
 
     function testItMintsLpTokensAfterInit() public {
@@ -132,7 +134,8 @@ contract NftAddTest is Fixture {
         uint256 lpTokenAmount = pair.nftAdd(
             baseTokenAmount,
             tokenIds,
-            minLpTokenAmount
+            minLpTokenAmount,
+            proofs
         );
         vm.stopPrank();
 
@@ -171,6 +174,6 @@ contract NftAddTest is Fixture {
 
         // act
         vm.expectRevert("Slippage: lp token amount out");
-        pair.nftAdd(baseTokenAmount, tokenIds, minLpTokenAmount);
+        pair.nftAdd(baseTokenAmount, tokenIds, minLpTokenAmount, proofs);
     }
 }

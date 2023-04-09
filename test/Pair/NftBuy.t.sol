@@ -9,6 +9,7 @@ contract NftBuyTest is Fixture, ERC721TokenReceiver {
     uint256 public outputAmount;
     uint256 public maxInputAmount;
     uint256[] public tokenIds;
+    bytes32[][] public proofs;
 
     function setUp() public {
         for (uint256 i = 0; i < 5; i++) {
@@ -22,7 +23,7 @@ contract NftBuyTest is Fixture, ERC721TokenReceiver {
         uint256 baseTokenAmount = 3.15e18;
         uint256 minLpTokenAmount = baseTokenAmount * tokenIds.length * 1e18;
         deal(address(usd), address(this), baseTokenAmount, true);
-        pair.nftAdd(baseTokenAmount, tokenIds, minLpTokenAmount);
+        pair.nftAdd(baseTokenAmount, tokenIds, minLpTokenAmount, proofs);
 
         tokenIds.pop();
         tokenIds.pop();

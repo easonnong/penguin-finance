@@ -9,6 +9,7 @@ contract NftRemoveTest is Fixture, ERC721TokenReceiver {
     uint256 public totalBaseTokenAmount = 3.15e18;
     uint256 public totalLpTokenAmount;
     uint256[] public tokenIds;
+    bytes32[][] public proofs;
 
     function setUp() public {
         deal(address(usd), address(this), totalBaseTokenAmount, true);
@@ -26,7 +27,8 @@ contract NftRemoveTest is Fixture, ERC721TokenReceiver {
         totalLpTokenAmount = pair.nftAdd(
             totalBaseTokenAmount,
             tokenIds,
-            minLpTokenAmount
+            minLpTokenAmount,
+            proofs
         );
 
         tokenIds.pop();

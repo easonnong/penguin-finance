@@ -5,6 +5,7 @@ import "solmate/tokens/ERC20.sol";
 import "solmate/tokens/ERC721.sol";
 import "openzeppelin/utils/math/Math.sol";
 import "solmate/utils/SafeTransferLib.sol";
+import "solmate/utils/MerkleProofLib.sol";
 
 import "./LpToken.sol";
 
@@ -16,10 +17,12 @@ contract Pair is ERC20, ERC721TokenReceiver {
     address public immutable nft; // address of the NFT
     address public immutable baseToken; // address of the base token
     address public immutable lpToken;
+    bytes32 public immutable merkleRoot;
 
     constructor(
         address _nft,
         address _baseToken,
+        bytes32 _merkleRoot,
         string memory pairSymbol,
         string memory nftName,
         string memory nftSymbol
@@ -31,7 +34,8 @@ contract Pair is ERC20, ERC721TokenReceiver {
         )
     {
         nft = _nft;
-        baseToken = _baseToken; // set to be address(0) for native ETH
+        baseToken = _baseToken; // use address(0) for native ETH
+        merkleRoot = _merkleRoot;
 
         lpToken = address(
             new LpToken(
@@ -110,10 +114,11 @@ contract Pair is ERC20, ERC721TokenReceiver {
      * @param maxInputAmount The maximum amount of base tokens to spend
      * @return The amount of base tokens spent
      */
-    function buy(
-        uint256 outputAmount,
-        uint256 maxInputAmount
-    ) public payable returns (uint256) {
+    function buy(uint256 outputAmount, uint256 maxInputAmount)
+        public
+        payable
+        returns (uint256)
+    {
         // inputAmount = (baseTokenReserves*outputAmount) / (fractionalTokenReserves - outputAmount)
         uint256 inputAmount = buyQuote(outputAmount);
 
@@ -224,8 +229,10 @@ contract Pair is ERC20, ERC721TokenReceiver {
     function nftAdd(
         uint256 baseTokenAmount,
         uint256[] calldata tokenIds,
-        uint256 minLpTokenAmount
+        uint256 minLpTokenAmount,
+        bytes32[][] calldata proofs
     ) public returns (uint256) {
+        _validateTokenIds(tokenIds, proofs);
         uint256 fractionalTokenAmount = wrap(tokenIds);
         uint256 lpTokenAmount = add(
             baseTokenAmount,
@@ -254,20 +261,20 @@ contract Pair is ERC20, ERC721TokenReceiver {
         return (baseTokenOutputAmount, fractionalTokenOutputAmount);
     }
 
-    function nftBuy(
-        uint256[] calldata tokenIds,
-        uint256 maxInputAmount
-    ) public returns (uint256) {
+    function nftBuy(uint256[] calldata tokenIds, uint256 maxInputAmount)
+        public
+        returns (uint256)
+    {
         uint256 inputAmount = buy(tokenIds.length * 1e18, maxInputAmount);
         unwrap(tokenIds);
 
         return inputAmount;
     }
 
-    function nftSell(
-        uint256[] calldata tokenIds,
-        uint256 minOutputAmount
-    ) public returns (uint256) {
+    function nftSell(uint256[] calldata tokenIds, uint256 minOutputAmount)
+        public
+        returns (uint256)
+    {
         uint256 inputAmount = wrap(tokenIds); // fractionalTokenAmount
         uint256 outputAmount = sell(inputAmount, minOutputAmount);
 
@@ -340,6 +347,24 @@ contract Pair is ERC20, ERC721TokenReceiver {
         emit Transfer(from, to, amount);
 
         return true;
+    }
+
+    function _validateTokenIds(
+        uint256[] calldata tokenIds,
+        bytes32[][] calldata proofs
+    ) internal view {
+        // if merkle root is not set then all tokens are valid
+        if (merkleRoot == bytes23(0)) return;
+
+        // validate merkle proofs against merkle root
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            bool isValid = MerkleProofLib.verify(
+                proofs[i],
+                merkleRoot,
+                keccak256(abi.encode(tokenIds[i]))
+            );
+            require(isValid, "Invalid merkle proof");
+        }
     }
 
     // ***************** //

@@ -10,7 +10,7 @@ contract CreateTest is Fixture {
         address baseToken = address(0xcafe);
 
         // act
-        address pair = address(penguin.create(nft, baseToken));
+        address pair = address(penguin.create(nft, baseToken, bytes32(0)));
 
         // assert
         assertTrue(pair != address(0), "Should have deployed pair");
@@ -22,7 +22,7 @@ contract CreateTest is Fixture {
         address baseToken = 0xCAFE000000000000000000000000000000000000;
 
         // act
-        Pair pair = penguin.create(nft, baseToken);
+        Pair pair = penguin.create(nft, baseToken, bytes32(0));
         LpToken lpToken = LpToken(pair.lpToken());
 
         // assert
