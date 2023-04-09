@@ -114,14 +114,8 @@ contract Pair is ERC20, ERC721TokenReceiver {
         uint256 outputAmount,
         uint256 maxInputAmount
     ) public payable returns (uint256) {
-        // x * y = k
-        // Calculate the required amount of base tokens to buy the output amount of fractional tokens
-        // (baseTokenReserves + inputAmount)*(fractionalTokenReserves - outputAmount) = baseTokenReserves * fractionalTokenReserves
-        // baseTokenReserves + inputAmount = （baseTokenReserves * fractionalTokenReserves）/ (fractionalTokenReserves - outputAmount)
-        // inputAmount = （baseTokenReserves * fractionalTokenReserves - (baseTokenReserves*fractionalTokenReserves - baseTokenReserves*outputAmount)）/ (fractionalTokenReserves - outputAmount)
         // inputAmount = (baseTokenReserves*outputAmount) / (fractionalTokenReserves - outputAmount)
-        uint256 inputAmount = (outputAmount * baseTokenReserves()) /
-            (fractionalTokenReserves() - outputAmount);
+        uint256 inputAmount = buyQuote(outputAmount);
 
         // check that the required amount of base tokens is less than the max amount
         require(inputAmount <= maxInputAmount, "Slippage: amount in");
@@ -158,13 +152,7 @@ contract Pair is ERC20, ERC721TokenReceiver {
         uint256 inputAmount, // fractionalTokenAmount
         uint256 minOutputAmount
     ) public returns (uint256) {
-        // (baseTokenReserves - outputAmount)*(fractionalTokenReserves + inputAmount) = baseTokenReserves * fractionalTokenReserves
-        // baseTokenReserves - outputAmount = (baseTokenReserves * fractionalTokenReserves) / (fractionalTokenReserves + inputAmount)
-        // outputAmount = (baseTokenReserves*fractionalTokenReserves + baseTokenReserves*inputAmount - baseTokenReserves * fractionalTokenReserves) / (fractionalTokenReserves + inputAmount)
-        // outputAmount = (baseTokenReserves*inputAmount) / (fractionalTokenReserves + inputAmount)
-        //@audit outputAmoount issuse
-        uint256 outputAmount = (baseTokenReserves() * inputAmount) /
-            (fractionalTokenReserves() + inputAmount);
+        uint256 outputAmount = sellQuote(inputAmount);
 
         // check that the outputted amount of fractional tokens is greater than the min amount
         require(outputAmount >= minOutputAmount, "Slippage: amount out");
@@ -400,8 +388,25 @@ contract Pair is ERC20, ERC721TokenReceiver {
      * @return The amount of base tokens required
      */
     function buyQuote(uint256 outputAmount) public view returns (uint256) {
+        // x * y = k
+        // Calculate the required amount of base tokens to buy the output amount of fractional tokens
+        // (baseTokenReserves + inputAmount*997/1000)*(fractionalTokenReserves - outputAmount) = baseTokenReserves * fractionalTokenReserves
+        // baseTokenReserves + inputAmount*997/1000 = （baseTokenReserves * fractionalTokenReserves）/ (fractionalTokenReserves - outputAmount)
+        // inputAmount*997/1000 = （baseTokenReserves * fractionalTokenReserves - (baseTokenReserves*fractionalTokenReserves - baseTokenReserves*outputAmount)）/ (fractionalTokenReserves - outputAmount)
+        // inputAmount = baseTokenReserves*outputAmount *1000 / (fractionalTokenReserves - outputAmount)*997
         return
-            (outputAmount * baseTokenReserves()) /
-            (fractionalTokenReserves() - outputAmount);
+            (outputAmount * baseTokenReserves() * 1000) /
+            ((fractionalTokenReserves() - outputAmount) * 997);
+    }
+
+    function sellQuote(uint256 inputAmount) public view returns (uint256) {
+        // (baseTokenReserves - outputAmount*1000/997)*(fractionalTokenReserves + inputAmount) = baseTokenReserves * fractionalTokenReserves
+        // baseTokenReserves - outputAmount*1000/997 = (baseTokenReserves * fractionalTokenReserves) / (fractionalTokenReserves + inputAmount)
+        // outputAmount*1000/997 = (baseTokenReserves*fractionalTokenReserves + baseTokenReserves*inputAmount - baseTokenReserves * fractionalTokenReserves) / (fractionalTokenReserves + inputAmount)
+        // outputAmount = (baseTokenReserves*inputAmount)*997 / (fractionalTokenReserves + inputAmount)*1000
+        //@audit outputAmoount issuse
+        return
+            (baseTokenReserves() * inputAmount * 997) /
+            ((fractionalTokenReserves() + inputAmount) * 1000);
     }
 }

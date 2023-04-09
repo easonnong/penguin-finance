@@ -5,12 +5,12 @@ import "../../src/Penguin.sol";
 import "../Shared/Fixture.t.sol";
 
 contract BuyTest is Fixture {
-    uint256 public outputAmount = 10;
+    uint256 public outputAmount = 0.1e18;
     uint256 public maxInputAmount;
 
     function setUp() public {
-        uint256 baseTokenAmount = 100;
-        uint256 fractionalTokenAmount = 30;
+        uint256 baseTokenAmount = 100e18;
+        uint256 fractionalTokenAmount = 30.123e18;
 
         deal(address(usd), address(this), baseTokenAmount, true);
         deal(address(pair), address(this), fractionalTokenAmount, true);

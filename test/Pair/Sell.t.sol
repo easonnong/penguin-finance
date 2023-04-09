@@ -23,11 +23,8 @@ contract SellTest is Fixture {
         uint256 minLpTokenAmount = baseTokenAmount * fractionalTokenAmount;
         pair.add(baseTokenAmount, fractionalTokenAmount, minLpTokenAmount);
 
-        minOutputAmount =
-            (pair.baseTokenReserves() * inputAmount) /
-            (pair.fractionalTokenReserves() + inputAmount);
-        // (inputAmount * pair.fractionalTokenReserves()) /
-        // (pair.baseTokenReserves() + inputAmount);
+        minOutputAmount = pair.sellQuote(inputAmount);
+
         deal(address(pair), address(this), inputAmount, true);
         deal(address(ethPair), address(this), fractionalTokenAmount, true);
         ethPair.add{value: baseTokenAmount}(

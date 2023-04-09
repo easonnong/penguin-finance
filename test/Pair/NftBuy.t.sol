@@ -28,8 +28,8 @@ contract NftBuyTest is Fixture, ERC721TokenReceiver {
         tokenIds.pop();
         outputAmount = tokenIds.length * 1e18;
         maxInputAmount =
-            (outputAmount * pair.baseTokenReserves()) /
-            (pair.fractionalTokenReserves() - outputAmount);
+            (outputAmount * pair.baseTokenReserves() * 1000) /
+            ((pair.fractionalTokenReserves() - outputAmount) * 997);
         deal(address(usd), address(this), maxInputAmount, true);
     }
 
