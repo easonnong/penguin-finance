@@ -24,6 +24,15 @@ contract Penguin is Owned {
         bytes32 merkleRoot
     );
 
+    /// @param nft The NFT contract address.
+    /// @param baseToken The base token contract address.
+    /// @param merkleRoot The merkle root for the valid tokenIds.
+    event Destroy(
+        address indexed nft,
+        address indexed baseToken,
+        bytes32 merkleRoot
+    );
+
     constructor() Owned(msg.sender) {}
 
     /// @notice Creates a new pair.
@@ -35,7 +44,7 @@ contract Penguin is Owned {
         address nft,
         address baseToken,
         bytes32 merkleRoot
-    ) public returns (Pair) {
+    ) public returns (Pair pair) {
         // check that the pair doesn't already exist
         require(
             pairs[nft][baseToken][merkleRoot] == address(0),
@@ -55,7 +64,7 @@ contract Penguin is Owned {
             baseTokenSymbol
         );
 
-        Pair pair = new Pair(
+        pair = new Pair(
             nft,
             baseToken,
             merkleRoot,
@@ -68,8 +77,6 @@ contract Penguin is Owned {
         pairs[nft][baseToken][merkleRoot] = address(pair);
 
         emit Create(nft, baseToken, merkleRoot);
-
-        return pair;
     }
 
     /// @notice Deletes the pair for the given NFT, base token, and merkle root.
@@ -89,5 +96,7 @@ contract Penguin is Owned {
 
         // delete the pair
         delete pairs[nft][baseToken][merkleRoot];
+
+        emit Destroy(nft, baseToken, merkleRoot);
     }
 }
