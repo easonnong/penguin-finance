@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "forge-std/Test.sol";
-import "forge-std/console.sol";
-
 import "../shared/Fixture.t.sol";
 import "../../src/Penguin.sol";
+import "solmate/tokens/ERC721.sol";
 
-contract NftRemoveTest is Fixture {
+contract NftRemoveTest is Fixture, ERC721TokenReceiver {
     uint256 public totalBaseTokenAmount = 3.15e18;
     uint256 public totalLpTokenAmount;
     uint256[] public tokenIds;
