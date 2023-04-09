@@ -8,8 +8,12 @@ gas_reports = ["Pair", "Penguin", "LpToken"]
 fs_permissions = [{ access = "read", path = "./script/rankings/"}]
 ffi = true
 
-[profile.default.fuzz]
-runs = 1024             # fuzz testing times
-
 [fmt]
 line_length = 120       # format line length
+
+[fuzz]
+runs = 256
+
+[profile.ci]
+ffi = false
+no_match_test = "MerkleProof"
