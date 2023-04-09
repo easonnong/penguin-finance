@@ -5,13 +5,19 @@ import "./Pair.sol";
 import "lib/SafeERC20Namer.sol";
 import "solmate/auth/Owned.sol";
 
+/// @title penguin finance
+/// @author easonnong
+/// @notice An AMM for creating and trading fractionalized NFTs.
 contract Penguin is Owned {
     using SafeERC20Namer for address;
 
-    // pairs[nft][baseToken][merkleRoot] -> pair
+    /// @dev pairs[nft][baseToken][merkleRoot] -> pair
     mapping(address => mapping(address => mapping(bytes32 => address)))
         public pairs;
 
+    /// @param nft The NFT contract address.
+    /// @param baseToken The base token contract address.
+    /// @param merkleRoot The merkle root for the valid tokenIds.
     event Create(
         address indexed nft,
         address indexed baseToken,
@@ -20,6 +26,11 @@ contract Penguin is Owned {
 
     constructor() Owned(msg.sender) {}
 
+    /// @notice Creates a new pair.
+    /// @param nft The NFT contract address.
+    /// @param baseToken The base token contract address.
+    /// @param merkleRoot The merkle root for the valid tokenIds.
+    /// @return pair The address of the new pair.
     function create(
         address nft,
         address baseToken,
@@ -61,6 +72,10 @@ contract Penguin is Owned {
         return pair;
     }
 
+    /// @notice Deletes the pair for the given NFT, base token, and merkle root.
+    /// @param nft The NFT contract address.
+    /// @param baseToken The base token contract address.
+    /// @param merkleRoot The merkle root for the valid tokenIds.
     function destroy(
         address nft,
         address baseToken,
