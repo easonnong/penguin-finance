@@ -252,7 +252,7 @@ contract Pair is ERC20, ERC721TokenReceiver {
         uint256[] calldata tokenIds,
         uint256 minLpTokenAmount,
         bytes32[][] calldata proofs
-    ) public returns (uint256) {
+    ) public payable returns (uint256) {
         _validateTokenIds(tokenIds, proofs);
         uint256 fractionalTokenAmount = wrap(tokenIds);
         uint256 lpTokenAmount = add(
@@ -289,7 +289,7 @@ contract Pair is ERC20, ERC721TokenReceiver {
         uint256[] calldata tokenIds,
         uint256 maxInputAmount,
         bytes32[][] calldata proofs
-    ) public returns (uint256) {
+    ) public payable returns (uint256) {
         _validateTokenIds(tokenIds, proofs);
 
         uint256 inputAmount = buy(tokenIds.length * 1e18, maxInputAmount);
@@ -454,18 +454,18 @@ contract Pair is ERC20, ERC721TokenReceiver {
         // inputAmount*997/1000 = （baseTokenReserves * fractionalTokenReserves - (baseTokenReserves*fractionalTokenReserves - baseTokenReserves*outputAmount)）/ (fractionalTokenReserves - outputAmount)
         // inputAmount = baseTokenReserves*outputAmount *1000 / (fractionalTokenReserves - outputAmount)*997
         return
-            (outputAmount * baseTokenReserves() * 1000) /
+            (outputAmount * 1000 * baseTokenReserves()) /
             ((fractionalTokenReserves() - outputAmount) * 997);
     }
 
     function sellQuote(uint256 inputAmount) public view returns (uint256) {
-        // (baseTokenReserves - outputAmount*1000/997)*(fractionalTokenReserves + inputAmount) = baseTokenReserves * fractionalTokenReserves
-        // baseTokenReserves - outputAmount*1000/997 = (baseTokenReserves * fractionalTokenReserves) / (fractionalTokenReserves + inputAmount)
-        // outputAmount*1000/997 = (baseTokenReserves*fractionalTokenReserves + baseTokenReserves*inputAmount - baseTokenReserves * fractionalTokenReserves) / (fractionalTokenReserves + inputAmount)
-        // outputAmount = (baseTokenReserves*inputAmount)*997 / (fractionalTokenReserves + inputAmount)*1000
-        //@audit outputAmoount issuse
+        // (baseTokenReserves - outputAmount)*(fractionalTokenReserves + inputAmount*997/1000) = baseTokenReserves * fractionalTokenReserves
+        // baseTokenReserves - outputAmount = (baseTokenReserves * fractionalTokenReserves) / (fractionalTokenReserves + inputAmount*997/1000)
+        // outputAmount = (baseTokenReserves*fractionalTokenReserves + baseTokenReserves*inputAmount*997/1000 - baseTokenReserves * fractionalTokenReserves) / (fractionalTokenReserves + inputAmount*997/1000)
+        // outputAmount = (baseTokenReserves*inputAmount*997/1000) / (fractionalTokenReserves + inputAmount*997/1000)
+        // outputAmount = (baseTokenReserves*inputAmount*997) / (fractionalTokenReserves*1000 + inputAmount*997)
         return
-            (baseTokenReserves() * inputAmount * 997) /
-            ((fractionalTokenReserves() + inputAmount) * 1000);
+            (inputAmount * 997 * baseTokenReserves()) /
+            (fractionalTokenReserves() * 1000 + inputAmount * 997);
     }
 }
