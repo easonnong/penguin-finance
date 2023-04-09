@@ -6,7 +6,7 @@ import "solmate/tokens/ERC721.sol";
 import "../shared/Fixture.t.sol";
 import "../../src/Penguin.sol";
 
-contract WrapTest is Fixture, ERC721TokenReceiver {
+contract CloseTest is Fixture, ERC721TokenReceiver {
     uint256[] public tokenIds;
 
     function setUp() public {
@@ -20,10 +20,10 @@ contract WrapTest is Fixture, ERC721TokenReceiver {
 
     function testExitSetsCloseTimestamp() public {
         // arrange
-        uint256 expectedCloseTimestamp = block.timestamp;
+        uint256 expectedCloseTimestamp = block.timestamp + 1 days;
 
         // act
-        pair.exit();
+        pair.close();
 
         // assert
         assertEq(
@@ -36,8 +36,8 @@ contract WrapTest is Fixture, ERC721TokenReceiver {
     function testCannotExitIfNotAdmin() public {
         // act
         vm.prank(address(0xabc));
-        vm.expectRevert("Exit: not owner");
-        pair.exit();
+        vm.expectRevert("Close: not owner");
+        pair.close();
 
         // assert
         assertEq(
@@ -49,7 +49,7 @@ contract WrapTest is Fixture, ERC721TokenReceiver {
 
     function testCannotWithdrawIfNotAdmin() public {
         // arrange
-        pair.exit();
+        pair.close();
 
         // act
         vm.prank(address(0xabc));
@@ -65,7 +65,7 @@ contract WrapTest is Fixture, ERC721TokenReceiver {
 
     function testCannotWithdrawIfNotEnoughTimeElapsed() public {
         // arrange
-        pair.exit();
+        pair.close();
 
         // act
         vm.expectRevert("Not withdrawable yet");
@@ -74,8 +74,8 @@ contract WrapTest is Fixture, ERC721TokenReceiver {
 
     function testItTransfersNftsAfterWithdraw() public {
         // arrange
-        pair.exit();
-        skip(1 days);
+        pair.close();
+        skip(7 days);
         uint256 tokenId = 1;
         bayc.transferFrom(address(this), address(pair), tokenId);
 
