@@ -53,13 +53,7 @@ contract Pair is ERC20, ERC721TokenReceiver {
         baseToken = _baseToken; // use address(0) for native ETH
         merkleRoot = _merkleRoot;
 
-        lpToken = address(
-            new LpToken(
-                string.concat(pairSymbol, " LP token"),
-                string.concat("LP-", pairSymbol),
-                18
-            )
-        );
+        lpToken = address(new LpToken(pairSymbol));
     }
 
     // ******************* //

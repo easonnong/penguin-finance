@@ -6,10 +6,15 @@ import "solmate/tokens/ERC20.sol";
 
 contract LpToken is Owned, ERC20 {
     constructor(
-        string memory _name,
-        string memory _symbol,
-        uint8 _decimals
-    ) Owned(msg.sender) ERC20(_name, _symbol, _decimals) {}
+        string memory pairSymbol
+    )
+        Owned(msg.sender)
+        ERC20(
+            string.concat(pairSymbol, " LP token"),
+            string.concat("LP-", pairSymbol),
+            18
+        )
+    {}
 
     /**
      * @dev Mints new tokens and sends them to the specified address.
