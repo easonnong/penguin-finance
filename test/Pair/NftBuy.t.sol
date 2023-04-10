@@ -41,7 +41,7 @@ contract NftBuyTest is Fixture, ERC721TokenReceiver {
         uint256 expectedInputAmount = maxInputAmount;
 
         // act
-        uint256 inputAmount = pair.nftBuy(tokenIds, maxInputAmount, proofs);
+        uint256 inputAmount = pair.nftBuy(tokenIds, maxInputAmount);
 
         // assert
         assertEq(
@@ -57,7 +57,7 @@ contract NftBuyTest is Fixture, ERC721TokenReceiver {
         uint256 thisBalanceBefore = usd.balanceOf(address(this));
 
         // act
-        pair.nftBuy(tokenIds, maxInputAmount, proofs);
+        pair.nftBuy(tokenIds, maxInputAmount);
 
         // assert
         assertEq(
@@ -74,7 +74,7 @@ contract NftBuyTest is Fixture, ERC721TokenReceiver {
 
     function testItTransfersNfts() public {
         // act
-        pair.nftBuy(tokenIds, maxInputAmount, proofs);
+        pair.nftBuy(tokenIds, maxInputAmount);
 
         // assert
         for (uint256 i = 0; i < tokenIds.length; i++) {
@@ -92,7 +92,7 @@ contract NftBuyTest is Fixture, ERC721TokenReceiver {
 
         // act
         vm.expectRevert("Slippage: amount in");
-        pair.nftBuy(tokenIds, maxInputAmount, proofs);
+        pair.nftBuy(tokenIds, maxInputAmount);
     }
 
     function testItBurnsFractionalTokens() public {
@@ -100,7 +100,7 @@ contract NftBuyTest is Fixture, ERC721TokenReceiver {
         uint256 totalSupplyBefore = pair.totalSupply();
 
         // act
-        pair.nftBuy(tokenIds, maxInputAmount, proofs);
+        pair.nftBuy(tokenIds, maxInputAmount);
 
         // assert
         assertEq(
@@ -145,7 +145,7 @@ contract NftBuyTest is Fixture, ERC721TokenReceiver {
         deal(address(usd), address(this), maxInputAmount, true);
 
         // act
-        pair.nftBuy(tokenIds, maxInputAmount, proofs);
+        pair.nftBuy(tokenIds, maxInputAmount);
 
         // assert
         for (uint256 i = 0; i < tokenIds.length; i++) {

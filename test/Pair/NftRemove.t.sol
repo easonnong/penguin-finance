@@ -47,12 +47,7 @@ contract NftRemoveTest is Fixture, ERC721TokenReceiver {
 
         // act
         (uint256 baseTokenAmount, uint256 fractionalTokenAmount) = pair
-            .nftRemove(
-                lpTokenAmount,
-                expectedBaseTokenAmount,
-                tokenIds,
-                proofs
-            );
+            .nftRemove(lpTokenAmount, expectedBaseTokenAmount, tokenIds);
 
         // assert
         assertEq(
@@ -78,12 +73,7 @@ contract NftRemoveTest is Fixture, ERC721TokenReceiver {
         uint256 totalSupplyBefore = lpToken.totalSupply();
 
         // act
-        pair.nftRemove(
-            lpTokenAmount,
-            minBaseTokenOutputAmount,
-            tokenIds,
-            proofs
-        );
+        pair.nftRemove(lpTokenAmount, minBaseTokenOutputAmount, tokenIds);
 
         // assert
         assertEq(
@@ -109,12 +99,7 @@ contract NftRemoveTest is Fixture, ERC721TokenReceiver {
         uint256 balanceBefore = usd.balanceOf(address(pair));
 
         // act
-        pair.nftRemove(
-            lpTokenAmount,
-            minBaseTokenOutputAmount,
-            tokenIds,
-            proofs
-        );
+        pair.nftRemove(lpTokenAmount, minBaseTokenOutputAmount, tokenIds);
 
         // assert
         assertEq(
@@ -139,12 +124,7 @@ contract NftRemoveTest is Fixture, ERC721TokenReceiver {
             1e18) / pair.fractionalTokenReserves();
 
         // act
-        pair.nftRemove(
-            lpTokenAmount,
-            minBaseTokenOutputAmount,
-            tokenIds,
-            proofs
-        );
+        pair.nftRemove(lpTokenAmount, minBaseTokenOutputAmount, tokenIds);
 
         // assert
         for (uint256 i = 0; i < tokenIds.length; i++) {
@@ -167,12 +147,7 @@ contract NftRemoveTest is Fixture, ERC721TokenReceiver {
 
         // act
         vm.expectRevert("Slippage: fractional token amount out");
-        pair.nftRemove(
-            lpTokenAmount,
-            minBaseTokenOutputAmount,
-            tokenIds,
-            proofs
-        );
+        pair.nftRemove(lpTokenAmount, minBaseTokenOutputAmount, tokenIds);
     }
 
     function testItRevertsBaseTokenSlippage() public {
@@ -187,12 +162,7 @@ contract NftRemoveTest is Fixture, ERC721TokenReceiver {
 
         // act
         vm.expectRevert("Slippage: base token amount out");
-        pair.nftRemove(
-            lpTokenAmount,
-            minBaseTokenOutputAmount,
-            tokenIds,
-            proofs
-        );
+        pair.nftRemove(lpTokenAmount, minBaseTokenOutputAmount, tokenIds);
     }
 
     function testItRemovesWithMerkleProof() public {
@@ -243,12 +213,7 @@ contract NftRemoveTest is Fixture, ERC721TokenReceiver {
         );
 
         // act
-        pair.nftRemove(
-            lpTokenAmount,
-            minBaseTokenOutputAmount,
-            tokenIds,
-            proofs
-        );
+        pair.nftRemove(lpTokenAmount, minBaseTokenOutputAmount, tokenIds);
 
         // assert
         for (uint256 i = 0; i < tokenIds.length; i++) {

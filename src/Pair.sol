@@ -260,8 +260,7 @@ contract Pair is ERC20, ERC721TokenReceiver {
         uint256 minLpTokenAmount,
         bytes32[][] calldata proofs
     ) public payable returns (uint256) {
-        _validateTokenIds(tokenIds, proofs);
-        uint256 fractionalTokenAmount = wrap(tokenIds);
+        uint256 fractionalTokenAmount = wrap(tokenIds, proofs);
         uint256 lpTokenAmount = add(
             baseTokenAmount,
             fractionalTokenAmount,
@@ -274,19 +273,19 @@ contract Pair is ERC20, ERC721TokenReceiver {
     function nftRemove(
         uint256 lpTokenAmount,
         uint256 minBaseTokenOutputAmount,
-        uint256[] calldata tokenIds,
-        bytes32[][] calldata proofs
-    ) public returns (uint256, uint256) {
-        _validateTokenIds(tokenIds, proofs);
-
-        (
+        uint256[] calldata tokenIds
+    )
+        public
+        returns (
             uint256 baseTokenOutputAmount,
             uint256 fractionalTokenOutputAmount
-        ) = remove(
-                lpTokenAmount,
-                minBaseTokenOutputAmount,
-                tokenIds.length * 1e18
-            );
+        )
+    {
+        (baseTokenOutputAmount, fractionalTokenOutputAmount) = remove(
+            lpTokenAmount,
+            minBaseTokenOutputAmount,
+            tokenIds.length * 1e18
+        );
         unwrap(tokenIds);
 
         return (baseTokenOutputAmount, fractionalTokenOutputAmount);
@@ -294,12 +293,9 @@ contract Pair is ERC20, ERC721TokenReceiver {
 
     function nftBuy(
         uint256[] calldata tokenIds,
-        uint256 maxInputAmount,
-        bytes32[][] calldata proofs
-    ) public payable returns (uint256) {
-        _validateTokenIds(tokenIds, proofs);
-
-        uint256 inputAmount = buy(tokenIds.length * 1e18, maxInputAmount);
+        uint256 maxInputAmount
+    ) public payable returns (uint256 inputAmount) {
+        inputAmount = buy(tokenIds.length * 1e18, maxInputAmount);
         unwrap(tokenIds);
 
         return inputAmount;
@@ -310,9 +306,7 @@ contract Pair is ERC20, ERC721TokenReceiver {
         uint256 minOutputAmount,
         bytes32[][] calldata proofs
     ) public returns (uint256) {
-        _validateTokenIds(tokenIds, proofs);
-
-        uint256 inputAmount = wrap(tokenIds); // fractionalTokenAmount
+        uint256 inputAmount = wrap(tokenIds, proofs); // fractionalTokenAmount
         uint256 outputAmount = sell(inputAmount, minOutputAmount);
 
         return outputAmount;
@@ -323,9 +317,13 @@ contract Pair is ERC20, ERC721TokenReceiver {
     // ******************** //
 
     function wrap(
-        uint256[] calldata tokenIds
+        uint256[] calldata tokenIds,
+        bytes32[][] calldata proofs
     ) public returns (uint256 fractionalTokenAmount) {
         // *** Checks *** //
+
+        // check the tokens exist in the merkle root
+        _validateTokenIds(tokenIds, proofs);
 
         // check that wrapping is not closed
         require(closeTimestamp == 0, "Wrap: closed");

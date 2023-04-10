@@ -9,6 +9,7 @@ contract UnwrapTest is Fixture, ERC721TokenReceiver {
     event Unwrap(uint256[] tokenIds);
 
     uint256[] public tokenIds;
+    bytes32[][] public proofs;
 
     function setUp() public {
         bayc.setApprovalForAll(address(pair), true);
@@ -18,7 +19,7 @@ contract UnwrapTest is Fixture, ERC721TokenReceiver {
             tokenIds.push(i);
         }
 
-        pair.wrap(tokenIds);
+        pair.wrap(tokenIds, proofs);
     }
 
     function testItTransfersTokens() public {

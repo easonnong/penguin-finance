@@ -11,6 +11,7 @@ contract AddTest is Fixture {
     event Wrap(uint256[] tokenIds);
 
     uint256[] public tokenIds;
+    bytes32[][] public proofs;
 
     function setUp() public {
         bayc.setApprovalForAll(address(pair), true);
@@ -23,7 +24,7 @@ contract AddTest is Fixture {
 
     function testItTransfersTokens() public {
         // act
-        pair.wrap(tokenIds);
+        pair.wrap(tokenIds, proofs);
 
         // assert
         for (uint256 i = 0; i < tokenIds.length; i++) {
@@ -40,7 +41,7 @@ contract AddTest is Fixture {
         uint256 expectedFractionalTokens = tokenIds.length * 1e18;
 
         // act
-        pair.wrap(tokenIds);
+        pair.wrap(tokenIds, proofs);
 
         // assert
         assertEq(
@@ -59,6 +60,33 @@ contract AddTest is Fixture {
         // act
         vm.expectEmit(true, true, true, true);
         emit Wrap(tokenIds);
-        pair.wrap(tokenIds);
+        pair.wrap(tokenIds, proofs);
+    }
+
+    function testItAddsWithMerkleProof() public {
+        // arrange
+        Pair pair = createPairScript.create(
+            address(bayc),
+            address(usd),
+            "YEET-mids.json",
+            address(penguin)
+        );
+        proofs = createPairScript.generateMerkleProofs(
+            "YEET-mids.json",
+            tokenIds
+        );
+        bayc.setApprovalForAll(address(pair), true);
+
+        // act
+        pair.wrap(tokenIds, proofs);
+
+        // assert
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            assertEq(
+                bayc.ownerOf(i),
+                address(pair),
+                "Should have sent bayc to pair"
+            );
+        }
     }
 }
