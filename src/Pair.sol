@@ -16,6 +16,7 @@ import "./interfaces/IPenguin.sol";
 /// @notice A pair of an NFT and a base token that can be used to create and trade fractionalized NFTs.
 contract Pair is ERC20, ERC721TokenReceiver {
     using SafeTransferLib for address;
+    using SafeTransferLib for ERC20;
 
     uint256 public constant ONE = 1e18;
     uint256 public constant CLOSE_GRACE_PERIOD = 7 days;
@@ -109,7 +110,7 @@ contract Pair is ERC20, ERC721TokenReceiver {
         if (baseToken != address(0)) {
             // transfer base tokens in
             // transfer tokens in
-            ERC20(baseToken).transferFrom(
+            ERC20(baseToken).safeTransferFrom(
                 msg.sender,
                 address(this),
                 baseTokenAmount
@@ -129,10 +130,11 @@ contract Pair is ERC20, ERC721TokenReceiver {
      * @param maxInputAmount The maximum amount of base tokens to spend
      * @return The amount of base tokens spent
      */
-    function buy(
-        uint256 outputAmount,
-        uint256 maxInputAmount
-    ) public payable returns (uint256) {
+    function buy(uint256 outputAmount, uint256 maxInputAmount)
+        public
+        payable
+        returns (uint256)
+    {
         // inputAmount = (baseTokenReserves*outputAmount) / (fractionalTokenReserves - outputAmount)
         uint256 inputAmount = buyQuote(outputAmount);
 
@@ -157,7 +159,7 @@ contract Pair is ERC20, ERC721TokenReceiver {
                 msg.sender.safeTransferETH(maxInputAmount - inputAmount);
         } else {
             // transfer base tokens in
-            ERC20(baseToken).transferFrom(
+            ERC20(baseToken).safeTransferFrom(
                 msg.sender,
                 address(this),
                 inputAmount
@@ -186,7 +188,7 @@ contract Pair is ERC20, ERC721TokenReceiver {
             msg.sender.safeTransferETH(outputAmount);
         } else {
             // transfer base tokens out
-            ERC20(baseToken).transfer(msg.sender, outputAmount);
+            ERC20(baseToken).safeTransfer(msg.sender, outputAmount);
         }
 
         emit Sell(inputAmount, outputAmount);
@@ -239,7 +241,7 @@ contract Pair is ERC20, ERC721TokenReceiver {
             msg.sender.safeTransferETH(baseTokenOutputAmount);
         } else {
             // transfer base tokens to sender
-            ERC20(baseToken).transfer(msg.sender, baseTokenOutputAmount);
+            ERC20(baseToken).safeTransfer(msg.sender, baseTokenOutputAmount);
         }
 
         emit Remove(
@@ -321,9 +323,10 @@ contract Pair is ERC20, ERC721TokenReceiver {
     //      Wrap logic      //
     // ******************** //
 
-    function wrap(
-        uint256[] calldata tokenIds
-    ) public returns (uint256 fractionalTokenAmount) {
+    function wrap(uint256[] calldata tokenIds)
+        public
+        returns (uint256 fractionalTokenAmount)
+    {
         // *** Checks *** //
 
         // check that wrapping is not closed
@@ -514,10 +517,11 @@ contract Pair is ERC20, ERC721TokenReceiver {
     /// @param baseTokenAmount The amount of base tokens to add.
     /// @param fractionalTokenAmount The amount of fractional tokens to add.
     /// @return lpTokenAmount The amount of lp tokens received.
-    function addQuote(
-        uint256 baseTokenAmount,
-        uint256 fractionalTokenAmount
-    ) public view returns (uint256) {
+    function addQuote(uint256 baseTokenAmount, uint256 fractionalTokenAmount)
+        public
+        view
+        returns (uint256)
+    {
         uint256 lpTokenSupply = lpToken.totalSupply();
         if (lpTokenSupply > 0) {
             uint256 baseTokenShare = (baseTokenAmount * lpTokenSupply) /
@@ -536,9 +540,11 @@ contract Pair is ERC20, ERC721TokenReceiver {
     /// @param lpTokenAmount The amount of lp tokens to burn.
     /// @return baseTokenAmount The amount of base tokens received.
     /// @return fractionalTokenAmount The amount of fractional tokens received.
-    function removeQuote(
-        uint256 lpTokenAmount
-    ) public view returns (uint256, uint256) {
+    function removeQuote(uint256 lpTokenAmount)
+        public
+        view
+        returns (uint256, uint256)
+    {
         uint256 lpTokenSupply = lpToken.totalSupply();
         uint256 baseTokenOutputAmount = (baseTokenReserves() * lpTokenAmount) /
             lpTokenSupply;
