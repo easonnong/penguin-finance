@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "../../shared/Fixture.t.sol";
+import "../../Shared/Fixture.t.sol";
 
 contract PriceTest is Fixture {
     using stdStorage for StdStorage;
