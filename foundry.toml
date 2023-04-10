@@ -14,6 +14,6 @@ line_length = 120       # format line length
 [fuzz]
 runs = 256
 
-[profile.ci]
-ffi = false
-no_match_test = "MerkleProof"
+#[profile.ci]
+#ffi = false
+#no_match_test = "MerkleProof"
