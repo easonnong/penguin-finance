@@ -1,5 +1,10 @@
 # Specification
 
+Penguin Finance is an NFT AMM that uses the xy=k invariant for the swap curve.
+Users can create shared liquidity pools (pairs) with constraints on which particular NFTs can be traded in those pairs. It makes sense to create pairs with groups of NFTs that are valued similarly by the market. For example, a pair to trade floor NFTs or a pair to trade rare NFTs.
+In addition to this, each pair also contains a fractional ERC20 representation of the NFTs contained within it.
+Users can wrap in and out of this fractional ERC20 token using valid NFTs in the pair.
+
 # Factory (Penguin.sol)
 
 The factory contract is responsible for creating new pairs.
