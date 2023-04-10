@@ -8,6 +8,12 @@ import "../Shared/Fixture.t.sol";
 import "../../src/Penguin.sol";
 
 contract RemoveTest is Fixture {
+    event Remove(
+        uint256 baseTokenAmount,
+        uint256 fractionalTokenAmount,
+        uint256 lpTokenAmount
+    );
+
     uint256 public totalBaseTokenAmount = 100;
     uint256 public totalFractionalTokenAmount = 30;
     uint256 public totalLpTokenAmount;
@@ -204,6 +210,57 @@ contract RemoveTest is Fixture {
             balanceBefore - address(ethPair).balance,
             minBaseTokenOutputAmount,
             "Should have transferred ether from pair"
+        );
+    }
+
+    function testItEmitsRemoveEvent() public {
+        // arrange
+        uint256 lpTokenAmount = totalLpTokenAmount / 2;
+        uint256 expectedBaseTokenAmount = totalBaseTokenAmount / 2;
+        uint256 expectedFractionalTokenAmount = totalFractionalTokenAmount / 2;
+
+        // act
+        vm.expectEmit(true, true, true, true);
+        emit Remove(
+            expectedBaseTokenAmount,
+            expectedFractionalTokenAmount,
+            lpTokenAmount
+        );
+        pair.remove(
+            lpTokenAmount,
+            expectedBaseTokenAmount,
+            expectedFractionalTokenAmount
+        );
+    }
+
+    function testItReturnsBaseTokenAmountAndFractionalTokenAmount(
+        uint256 fractionToRemove
+    ) public {
+        // arrange
+        fractionToRemove = bound(fractionToRemove, 0, 1e18);
+        uint256 lpTokenAmount = (totalLpTokenAmount * fractionToRemove) / 1e18;
+        uint256 expectedBaseTokenAmount = (totalBaseTokenAmount *
+            lpTokenAmount) / lpToken.totalSupply();
+        uint256 expectedFractionalTokenAmount = (totalFractionalTokenAmount *
+            lpTokenAmount) / lpToken.totalSupply();
+
+        // act
+        (uint256 baseTokenAmount, uint256 fractionalTokenAmount) = pair.remove(
+            lpTokenAmount,
+            expectedBaseTokenAmount,
+            expectedFractionalTokenAmount
+        );
+
+        // assert
+        assertEq(
+            baseTokenAmount,
+            expectedBaseTokenAmount,
+            "Should have returned correct base token amount"
+        );
+        assertEq(
+            fractionalTokenAmount,
+            expectedFractionalTokenAmount,
+            "Should have returned correct fractional token amount"
         );
     }
 }
