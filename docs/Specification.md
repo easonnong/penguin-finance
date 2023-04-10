@@ -1,5 +1,20 @@
 # Specification
 
+# Factory (Penguin.sol)
+
+The factory contract is responsible for creating new pairs.
+Users can create new pairs for a given nft, base token and merkle root.
+The merkle root is a hash of all the valid token ids which can be traded in a particular pair.
+When a new pair is created its address is stored in a mapping.
+An admin can remove a pair from this mapping by destroying it.
+
+```solidity
+create(address nft, address baseToken, bytes32 merkleRoot)
+destroy(address nft, address baseToken, bytes32 merkleRoot)
+```
+
+# Pair (Pair.sol)
+
 The AMM is split into three distinct logical parts. The core AMM, NFT wrapping, and the NFT AMM itself. The core AMM is a stripped down version of [UNI-V2](https://github.com/Uniswap/v2-core) that handles swapping between a base token (such as WETH or USDC) and a fractional NFT token. The NFT wrapping logic lets you wrap NFTs and receive ERC20 fractional tokens - or vice versa. The NFT AMM logic is a set of helper functions that wrap around the core AMM and the NFT wrapping logic.
 
 ## Core AMM
