@@ -154,8 +154,7 @@ contract Pair is ERC20, ERC721TokenReceiver {
         if (baseToken == address(0)) {
             // refund surplus eth
             uint256 refundAmount = maxInputAmount - inputAmount;
-            if (refundAmount > 0)
-                msg.sender.safeTransferETH(maxInputAmount - inputAmount);
+            if (refundAmount > 0) msg.sender.safeTransferETH(refundAmount);
         } else {
             // transfer base tokens in
             ERC20(baseToken).safeTransferFrom(
@@ -497,9 +496,11 @@ contract Pair is ERC20, ERC721TokenReceiver {
         // outputAmount = (baseTokenReserves*fractionalTokenReserves + baseTokenReserves*inputAmount*997/1000 - baseTokenReserves * fractionalTokenReserves) / (fractionalTokenReserves + inputAmount*997/1000)
         // outputAmount = (baseTokenReserves*inputAmount*997/1000) / (fractionalTokenReserves + inputAmount*997/1000)
         // outputAmount = (baseTokenReserves*inputAmount*997) / (fractionalTokenReserves*1000 + inputAmount*997)
+        uint256 inputAmountWithFee = inputAmount * 997;
+
         return
-            (inputAmount * 997 * baseTokenReserves()) /
-            (fractionalTokenReserves() * 1000 + inputAmount * 997);
+            (inputAmountWithFee * baseTokenReserves()) /
+            ((fractionalTokenReserves() * 1000) + inputAmountWithFee);
     }
 
     /// @notice The amount of lp tokens received for adding a given amount of base tokens and fractional tokens.
