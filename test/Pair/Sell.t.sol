@@ -8,6 +8,8 @@ import "../Shared/Fixture.t.sol";
 import "../../src/Penguin.sol";
 
 contract SellTest is Fixture {
+    event Sell(uint256 inputAmount, uint256 outputAmount);
+
     uint256 public inputAmount = 10;
     uint256 public minOutputAmount;
 
@@ -122,5 +124,12 @@ contract SellTest is Fixture {
             minOutputAmount,
             "Should have transferred ether to sender"
         );
+    }
+
+    function testItEmitsSellEvent() public {
+        // act
+        vm.expectEmit(true, true, true, true);
+        emit Sell(inputAmount, minOutputAmount);
+        pair.sell(inputAmount, minOutputAmount);
     }
 }

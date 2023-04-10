@@ -8,6 +8,8 @@ import "../Shared/Fixture.t.sol";
 import "../../src/Penguin.sol";
 
 contract AddTest is Fixture {
+    event Wrap(uint256[] tokenIds);
+
     uint256[] public tokenIds;
 
     function setUp() public {
@@ -51,5 +53,12 @@ contract AddTest is Fixture {
             expectedFractionalTokens,
             "Should have minted fractional tokens"
         );
+    }
+
+    function testItEmitsWrapEvent() public {
+        // act
+        vm.expectEmit(true, true, true, true);
+        emit Wrap(tokenIds);
+        pair.wrap(tokenIds);
     }
 }

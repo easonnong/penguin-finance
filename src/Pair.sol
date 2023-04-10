@@ -325,7 +325,12 @@ contract Pair is ERC20, ERC721TokenReceiver {
         uint256[] calldata tokenIds
     ) public returns (uint256 fractionalTokenAmount) {
         // *** Checks *** //
+
+        // check that wrapping is not closed
         require(closeTimestamp == 0, "Wrap: closed");
+
+        // *** Effects *** //
+
         fractionalTokenAmount = tokenIds.length * ONE;
 
         // mint fractional tokens to sender

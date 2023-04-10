@@ -7,6 +7,9 @@ import "../Shared/Fixture.t.sol";
 import "../../src/Penguin.sol";
 
 contract CloseTest is Fixture, ERC721TokenReceiver {
+    event Close(uint256 closeTimestamp);
+    event Withdraw(uint256 tokenId);
+
     uint256[] public tokenIds;
 
     function setUp() public {
@@ -88,5 +91,25 @@ contract CloseTest is Fixture, ERC721TokenReceiver {
             address(this),
             "Should have sent bayc to sender"
         );
+    }
+
+    function testItEmitsCloseEvent() public {
+        // act
+        vm.expectEmit(true, true, true, true);
+        emit Close(block.timestamp + 1 days);
+        pair.close();
+    }
+
+    function testItEmitsWithdrawEvent() public {
+        // arrange
+        pair.close();
+        skip(7 days);
+        uint256 tokenId = 1;
+        bayc.transferFrom(address(this), address(pair), tokenId);
+
+        // act
+        vm.expectEmit(true, true, true, true);
+        emit Withdraw(tokenId);
+        pair.withdraw(tokenId);
     }
 }

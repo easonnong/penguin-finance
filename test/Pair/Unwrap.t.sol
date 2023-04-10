@@ -6,6 +6,8 @@ import "../../src/Penguin.sol";
 import "solmate/tokens/ERC721.sol";
 
 contract UnwrapTest is Fixture, ERC721TokenReceiver {
+    event Unwrap(uint256[] tokenIds);
+
     uint256[] public tokenIds;
 
     function setUp() public {
@@ -54,5 +56,12 @@ contract UnwrapTest is Fixture, ERC721TokenReceiver {
             expectedFractionalTokensBurned,
             "Should have burned fractional tokens"
         );
+    }
+
+    function testItEmitsUnwrapEvent() public {
+        // act
+        vm.expectEmit(true, true, true, true);
+        emit Unwrap(tokenIds);
+        pair.unwrap(tokenIds);
     }
 }
