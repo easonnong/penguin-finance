@@ -50,6 +50,11 @@ contract Penguin is Owned {
             pairs[nft][baseToken][merkleRoot] == address(0),
             "Pair already exists"
         );
+        require(nft.code.length > 0, "Invalid NFT contract");
+        require(
+            baseToken.code.length > 0 || baseToken == address(0),
+            "Invalid base token contract"
+        );
 
         // deploy the pair
 

@@ -12,8 +12,8 @@ contract CreateTest is Fixture {
 
     function testItReturnsPair() public {
         // arrange
-        address nft = address(0xbeef);
-        address baseToken = address(0xcafe);
+        address nft = address(bayc);
+        address baseToken = address(lpToken);
 
         // act
         address pair = address(penguin.create(nft, baseToken, bytes32(0)));
@@ -26,6 +26,9 @@ contract CreateTest is Fixture {
         // arrange
         address nft = 0xbEEFB00b00000000000000000000000000000000;
         address baseToken = 0xCAFE000000000000000000000000000000000000;
+
+        vm.etch(nft, address(bayc).code);
+        vm.etch(baseToken, address(usd).code);
 
         // act
         Pair pair = penguin.create(nft, baseToken, bytes32(0));
@@ -56,8 +59,8 @@ contract CreateTest is Fixture {
 
     function testItSavesPair() public {
         // arrange
-        address nft = address(0xbeef);
-        address baseToken = address(0xcafe);
+        address nft = address(bayc);
+        address baseToken = address(lpToken);
         bytes32 merkleRoot = bytes32(uint256(0xb00b));
 
         // act
@@ -73,8 +76,8 @@ contract CreateTest is Fixture {
 
     function testItRevertsIfDeployingSamePairTwice() public {
         // arrange
-        address nft = address(0xbeef);
-        address baseToken = address(0xcafe);
+        address nft = address(bayc);
+        address baseToken = address(lpToken);
         bytes32 merkleRoot = bytes32(uint256(0xb00b));
         penguin.create(nft, baseToken, merkleRoot);
 
@@ -85,8 +88,8 @@ contract CreateTest is Fixture {
 
     function testItEmitsCreateEvent() public {
         // arrange
-        address nft = address(0xbeef);
-        address baseToken = address(0xcafe);
+        address nft = address(bayc);
+        address baseToken = address(usd);
         bytes32 merkleRoot = bytes32(uint256(0xb00b));
 
         // act
@@ -95,19 +98,23 @@ contract CreateTest is Fixture {
         penguin.create(nft, baseToken, merkleRoot);
     }
 
-    function testItSavesPair(
-        address nft,
-        address baseToken,
-        bytes32 merkleRoot
-    ) public {
-        // act
-        address pair = address(penguin.create(nft, baseToken, merkleRoot));
+    function testItRevertsIfNftCodeNotSet() public {
+        // arrange
+        address nft = 0xbEEFB00b00000000000000000000000000000000;
+        address baseToken = address(usd);
 
-        // assert
-        assertEq(
-            penguin.pairs(nft, baseToken, merkleRoot),
-            pair,
-            "Should have saved pair address in pairs"
-        );
+        // act
+        vm.expectRevert("Invalid NFT contract");
+        penguin.create(nft, baseToken, bytes32(0));
+    }
+
+    function testItRevertsIfBaseTokenCodeNotSet() public {
+        // arrange
+        address nft = address(bayc);
+        address baseToken = address(0x123);
+
+        // act
+        vm.expectRevert("Invalid base token contract");
+        penguin.create(nft, baseToken, bytes32(0));
     }
 }
