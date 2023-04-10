@@ -283,7 +283,7 @@ contract Pair is ERC20, ERC721TokenReceiver {
         (baseTokenOutputAmount, fractionalTokenOutputAmount) = remove(
             lpTokenAmount,
             minBaseTokenOutputAmount,
-            tokenIds.length * 1e18
+            tokenIds.length * ONE
         );
         unwrap(tokenIds);
 
@@ -294,7 +294,7 @@ contract Pair is ERC20, ERC721TokenReceiver {
         uint256[] calldata tokenIds,
         uint256 maxInputAmount
     ) public payable returns (uint256 inputAmount) {
-        inputAmount = buy(tokenIds.length * 1e18, maxInputAmount);
+        inputAmount = buy(tokenIds.length * ONE, maxInputAmount);
         unwrap(tokenIds);
 
         return inputAmount;
